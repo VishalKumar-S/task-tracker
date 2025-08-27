@@ -1,0 +1,32 @@
+version: '3.8'
+services:
+  mysql:
+    image: mysql:8
+    environment:
+      MYSQL_USER: taskUser
+      MYSQL_PASSWORD: taskPassword
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: taskdb
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+
+volumes:
+  mysql-data:
+
+#  tasks-service:
+#    build: ./tasks-service
+#    depends_on:
+#      - mysql
+#    ports:
+#      - "9000:9000"
+
+#  notification-service:
+#    build: ./notification-service
+#    depends_on:
+#      - mysql
+#    ports:
+#      - "50051:50051"
+
