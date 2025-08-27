@@ -1,9 +1,9 @@
 package models
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 
-case class Task(id: Long, title: String, dueDate: LocalDate, status: String = "PENDING", notified: Boolean = false)
+case class Task(id: Long, title: String, dueDate: LocalDateTime, status: String = "PENDING", notified: Boolean = false)
 
-case class TaskCreate(title: String, dueDate: LocalDate)
+case class TaskCreate(title: String, dueDate: LocalDateTime)
 
-case class TaskUpdate(title: Option[String], dueDate: Option[LocalDate], status: Option[String], notified: Option[Boolean])
+case class TaskUpdate(title: Option[String], dueDate: Option[LocalDateTime], status: Option[String], notified: Option[Boolean])

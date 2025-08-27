@@ -26,4 +26,11 @@ class TaskRepository @Inject()(protected val dbConfigProvider: DatabaseConfigPro
   def findByStatus(status: String): Future[Seq[Task]] = db.run(tasks.filter(_.status===status).result)
 
   def findById(id: Long): Future[Option[Task]] = db.run(tasks.filter(_.id===id).result.headOption)
+
+//  def findDueTasks(now: LocalDateTime): Future[Seq[Task]] = {
+//    val
+//    db.run(tasks.filter(_.dueDate=now, d).result)
+//  }
+//
+//  )
 }

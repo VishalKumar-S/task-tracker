@@ -13,4 +13,4 @@ POST   /tasks                    controllers.TaskController.createTask()
 
 PUT   /tasks/:id                 controllers.TaskController.updateTask(id: Long)
 
-GET   /tasks             controllers.TaskController.getTaskByStatus(status: String)
+GET   /tasks                     controllers.TaskController.getTaskByStatus(status: String)

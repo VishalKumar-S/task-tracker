@@ -35,4 +35,6 @@ class TaskService @Inject()(taskRepository: TaskRepository)(implicit ec: Executi
   }
 
   def getTasksByStatus(status: String): Future[Seq[Task]] = taskRepository.findByStatus(status)
+
+//  def findDueTasks(now: LocalDateTime) =
 }

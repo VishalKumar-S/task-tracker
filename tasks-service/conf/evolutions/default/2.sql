@@ -1,0 +1,7 @@
+# --- !Ups
+
+ALTER TABLE tasks MODIFY COLUMN due_date DATETIME NOT NULL;
+
+# --- !Downs
+
+ALTER TABLE tasks MODIFY COLUMN due_date DATE NOT NULL;
