@@ -3,15 +3,15 @@ package models
 import slick.jdbc.MySQLProfile.api._
 import java.time.LocalDateTime
 import java.sql.Timestamp
-import java.time.{LocalDateTime, ZoneOffset}
+import java.time.{LocalDateTime, ZoneOffset, ZoneId}
 
 
 
 class TaskTableDef(tag: Tag) extends Table[Task](tag, "tasks"){
 
-    implicit val localDateTimeColumnType: BaseColumnType[LocalDateTime] = MappedColumnType.base[LocalDateTime, Timestamp](
-      ldt => Timestamp.valueOf(ldt),
-      ts => ts.toLocalDateTime
+      implicit val localDateTimeColumnType: BaseColumnType[LocalDateTime] = MappedColumnType.base[LocalDateTime, Timestamp](
+      ldt => Timestamp.from(ldt.atZone(ZoneId.of("Asia/Kolkata")).toInstant()),
+      ts => LocalDateTime.ofInstant(ts.toInstant, ZoneOffset.UTC)
     )
 
     def id = column[Long]("id", O.PrimaryKey, O.AutoInc)

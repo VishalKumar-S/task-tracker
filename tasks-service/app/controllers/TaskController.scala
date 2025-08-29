@@ -21,8 +21,8 @@ class TaskController @Inject()(cc: ControllerComponents, taskService: TaskServic
         id => Ok(Json.obj("id"->id))
       }
     }.getOrElse{
-        Future.successful(BadRequest("Invalid JSON"))
-      }
+      Future.successful(BadRequest("Invalid JSON"))
+    }
   }
 
 
@@ -32,16 +32,16 @@ class TaskController @Inject()(cc: ControllerComponents, taskService: TaskServic
         case Some(updatedTask) =>  Ok(Json.toJson(updatedTask))
         case None => NotFound(Json.obj("error"->s"Invalid Task ID: $id"))
       }
-  }.getOrElse{
-    Future.successful(BadRequest(Json.obj("error" -> "Invalid JSON format for updating a task")))
-  }
+    }.getOrElse{
+      Future.successful(BadRequest(Json.obj("error" -> "Invalid JSON format for updating a task")))
+    }
   }
 
 
   def getTaskByStatus(status: String) = Action.async{
     taskService.getTasksByStatus(status).map{ tasks  => Ok(Json.toJson(tasks))}
   }
-      }
+}
 
 
 

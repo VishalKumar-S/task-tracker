@@ -4,6 +4,8 @@ import models._
 import repositories.TaskRepository
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import java.time.LocalDateTime
+import java.time.{LocalDateTime, ZoneOffset}
 
 //Dependency Injection (DI), managed by Guice in Play.
 //
@@ -22,11 +24,11 @@ class TaskService @Inject()(taskRepository: TaskRepository)(implicit ec: Executi
       case Some(existingTask) =>
         val updatedTask =
           existingTask.copy(
-          title = task.title.getOrElse(existingTask.title),
-          dueDate = task.dueDate.getOrElse(existingTask.dueDate),
-          status = task.status.getOrElse(existingTask.status),
-          notified = task.notified.getOrElse(existingTask.notified)
-        )
+            title = task.title.getOrElse(existingTask.title),
+            dueDate = task.dueDate.getOrElse(existingTask.dueDate),
+            status = task.status.getOrElse(existingTask.status),
+            notified = task.notified.getOrElse(existingTask.notified)
+          )
 
         taskRepository.update(updatedTask,id)
       case None => Future.successful(None)
@@ -36,5 +38,19 @@ class TaskService @Inject()(taskRepository: TaskRepository)(implicit ec: Executi
 
   def getTasksByStatus(status: String): Future[Seq[Task]] = taskRepository.findByStatus(status)
 
-//  def findDueTasks(now: LocalDateTime) =
+  def processDueTasks(): Future[Unit] = {
+    val now = LocalDateTime.now(ZoneOffset.UTC)
+//    println(s"Current time in Service Layer (UTC) ${now}")
+    taskRepository.findDueTasks(now).flatMap{
+      dueTasks => Future.sequence{
+        dueTasks.map{
+          dueTask => println(s"Task due soon ${dueTask.title} and time is ${dueTask.dueDate}")
+            taskRepository.markAsNotified(dueTask.id)
+        }
+      }
+    }.map(_ => ())
+
+
+
+  }
 }
