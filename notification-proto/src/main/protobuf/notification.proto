@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package notifications;
+
+message NotifyRequest {
+    int64 taskID = 1;
+    string taskTitle = 2;
+    string dueDate = 3;
+}
+
+message NotifyResponse {
+    string status = 1;
+}
+
+service NotificationService {
+    rpc SendNotification(NotifyRequest) returns (NotifyResponse);
+}

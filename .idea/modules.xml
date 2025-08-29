@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/task-tracker.iml" filepath="$PROJECT_DIR$/.idea/task-tracker.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/task-tracker/task-tracker_8848.iml" filepath="$PROJECT_DIR$/.idea/modules/task-tracker/task-tracker_8848.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/task-tracker/task-tracker_8848.main.iml" filepath="$PROJECT_DIR$/.idea/modules/task-tracker/task-tracker_8848.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/task-tracker/task-tracker_8848.test.iml" filepath="$PROJECT_DIR$/.idea/modules/task-tracker/task-tracker_8848.test.iml" />
     </modules>
   </component>
 </project>
