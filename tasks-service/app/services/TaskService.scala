@@ -6,6 +6,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import java.time.LocalDateTime
 import java.time.{LocalDateTime, ZoneOffset}
+import clients.NotificationClient
 
 //Dependency Injection (DI), managed by Guice in Play.
 //
@@ -16,7 +17,7 @@ import java.time.{LocalDateTime, ZoneOffset}
 //  At runtime, Guice wires everything together.
 
 @Singleton
-class TaskService @Inject()(taskRepository: TaskRepository)(implicit ec: ExecutionContext) {
+class TaskService @Inject()(taskRepository: TaskRepository, notificationClient: NotificationClient)(implicit ec: ExecutionContext) {
   def createTask(task: TaskCreate): Future[Long] = taskRepository.create(task)
 
   def updateTask(task: TaskUpdate, id: Long): Future[Option[Task]] = {
@@ -40,17 +41,17 @@ class TaskService @Inject()(taskRepository: TaskRepository)(implicit ec: Executi
 
   def processDueTasks(): Future[Unit] = {
     val now = LocalDateTime.now(ZoneOffset.UTC)
-//    println(s"Current time in Service Layer (UTC) ${now}")
-    taskRepository.findDueTasks(now).flatMap{
-      dueTasks => Future.sequence{
-        dueTasks.map{
-          dueTask => println(s"Task due soon ${dueTask.title} and time is ${dueTask.dueDate}")
-            taskRepository.markAsNotified(dueTask.id)
+    taskRepository.findDueTasks(now).flatMap {
+      dueTasks =>
+        val notificationFutures = dueTasks.map {
+          dueTask =>
+            for {
+              response <- notificationClient.sendNotification(dueTask.id, dueTask.title, dueTask.dueDate)
+              _ = println(s"Task id: ${dueTask.id} status: ${response.status}")
+              _ <- taskRepository.markAsNotified(dueTask.id)
+            } yield ()
         }
-      }
-    }.map(_ => ())
-
-
-
+        Future.sequence(notificationFutures).map(_ => ())
+    }
   }
 }

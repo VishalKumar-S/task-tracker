@@ -1,12 +1,13 @@
-val scala3Version = "3.4.2"
-
-lazy val root = project
-  .in(file("."))
+lazy val root = (project in file("."))
   .settings(
     name := "notification-service",
-    version := "0.1.0-SNAPSHOT",
+    version := "0.1.0",
+    scalaVersion := "2.13.12",
 
-    scalaVersion := scala3Version,
+    libraryDependencies ++= Seq(
+      "com.example" %% "notification-proto" % "0.1.0",           // your local proto jar
+      "io.grpc" % "grpc-netty" % "1.62.2",                       // gRPC transport
+      "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % "0.11.13" // ScalaPB gRPC runtime
+    )
 
-    libraryDependencies += "org.scalameta" %% "munit" % "1.0.0" % Test
   )
