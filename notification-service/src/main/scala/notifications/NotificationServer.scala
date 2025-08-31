@@ -10,7 +10,7 @@ import org.flywaydb.core.Flyway
 import com.typesafe.config.ConfigFactory
 import notifications.models._
 import notifications.repositories._
-import slick.jdbc.MySQLProfile.api._
+import slick.jdbc.{JdbcProfile, MySQLProfile}
 
 
 class NotificationServiceImpl(repository: NotificationRepository)(implicit ec: ExecutionContext) extends NotificationServiceGrpc.NotificationService {
@@ -47,7 +47,7 @@ object NotificationServer {
     val password = config.getString("db.default.password")
 
 
-    val db = Database.forConfig("db.default", config)
+    val db = MySQLProfile.api.Database.forConfig("db.default", config)
 
     val flyway = Flyway.configure()
       .dataSource(url, user, password)
@@ -61,7 +61,7 @@ object NotificationServer {
 
     val server = ServerBuilder
       .forPort(50051)
-      .addService(NotificationServiceGrpc.bindService(new NotificationServiceImpl(new NotificationRepository(db)), ec))
+      .addService(NotificationServiceGrpc.bindService(new NotificationServiceImpl(new NotificationRepository(MySQLProfile, db)), ec))
       .build().start()
 
     println("NotificationService gRPC server started on port 50051")
