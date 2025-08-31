@@ -1,13 +1,13 @@
 package notifications.models
 
 import slick.jdbc.MySQLProfile.api._
-import java.time.LocalDateTime
+import java.time.{LocalDateTime, ZoneOffset}
 
 case class Notification(id: Option[Long] = None,
                         taskId: Long,
                         taskTitle: String,
                         dueDate: LocalDateTime,
-                        createdAt: LocalDateTime = LocalDateTime.now())
+                        createdAt: LocalDateTime = LocalDateTime.now(ZoneOffset.UTC))
 
 
 class NotificationTable(tag: Tag) extends Table[Notification](tag, "notifications") {

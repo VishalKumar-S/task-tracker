@@ -4,7 +4,6 @@ import models._
 import repositories.TaskRepository
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-import java.time.LocalDateTime
 import java.time.{LocalDateTime, ZoneOffset}
 import clients.NotificationClient
 
