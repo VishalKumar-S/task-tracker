@@ -14,6 +14,10 @@ lazy val root = (project in file("."))
       "com.typesafe" % "config" % "1.4.3",                        // For loading application.conf
       "com.typesafe.slick" %% "slick" % "3.5.1",                  // Slick for DB access
       "com.typesafe.slick" %% "slick-hikaricp" % "3.5.1",         // Slick connection pooling
+      "org.scalatest" %% "scalatest" % "3.2.19" % Test,
+      "org.mockito" %% "mockito-scala" % "1.17.31" % Test,
+      "com.h2database" % "h2" % "2.2.224" % Test // in-memory DB for repo tests
+
 
 
 
