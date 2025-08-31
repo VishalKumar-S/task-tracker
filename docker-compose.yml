@@ -3,14 +3,21 @@ services:
   mysql:
     image: mysql:8
     environment:
+      #Tasks-Service
       MYSQL_USER: taskUser
       MYSQL_PASSWORD: taskPassword
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: taskdb
+
+#      #Notification-Service
+#      MYSQL_USER_NOTIFY: notifyUser
+#      MYSQL_PASSWORD_NOTIFY: notifyPassword
+#      MYSQL_DATABASE_NOTIFY: notificationdb
     ports:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d
 
 
 volumes:
