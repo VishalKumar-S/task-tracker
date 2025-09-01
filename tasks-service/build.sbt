@@ -19,7 +19,13 @@ lazy val root = (project in file("."))
       "com.example" %% "notification-proto" % "0.1.0",
       "io.grpc" % "grpc-netty" % "1.57.2",
       "io.grpc" % "grpc-protobuf" % "1.57.2",
-      "io.grpc" % "grpc-stub" % "1.57.2"
+      "io.grpc" % "grpc-stub" % "1.57.2",
+
+      "org.scalatest" %% "scalatest" % "3.2.19" % Test,
+      "org.scalamock" %% "scalamock" % "6.0.0" % Test,
+      "org.mockito" %% "mockito-scala" % "1.17.31" % Test,
+      "com.h2database" % "h2" % "2.2.224" % Test // in-memory DB for repo tests
+
     )
   )
 
