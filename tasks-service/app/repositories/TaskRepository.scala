@@ -8,9 +8,8 @@ import scala.concurrent.{ExecutionContext, Future}
 import java.time.LocalDateTime
 
 @Singleton
-class TaskRepository @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
-                              (implicit ec: ExecutionContext)
-  extends HasDatabaseConfigProvider[JdbcProfile] {
+class TaskRepository(val profile: JdbcProfile, val db: JdbcProfile#Backend#Database)
+                    (implicit ec: ExecutionContext) {
 
   import profile.api._
 

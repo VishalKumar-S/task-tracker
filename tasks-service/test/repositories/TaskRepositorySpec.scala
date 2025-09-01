@@ -12,14 +12,7 @@ import slick.jdbc.H2Profile.api._
 class TaskRepositorySpec extends AnyFlatSpec with Matchers{
   implicit val ec: ExecutionContext = ExecutionContext.global
   val db = H2Profile.api.Database.forConfig("h2mem1")
-
-  val repo = new TaskRepository(
-    new DatabaseConfigProvider {
-      override def get[P <: BasicProfile]: DatabaseConfig[P] =
-        DatabaseConfig.forConfig[P]("h2mem1") // matches application.conf/test.conf
-    }
-  )(ExecutionContext.global)
-
+  val repo = new TaskRepository(H2Profile, db)
 
   override def withFixture(test: NoArgTest) = {
     Await.result(db.run(TaskTableDef.tasks.schema.createIfNotExists), 2.seconds)
