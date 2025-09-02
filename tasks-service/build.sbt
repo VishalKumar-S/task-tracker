@@ -29,6 +29,14 @@ lazy val root = (project in file("."))
     )
   )
 
+
+
+enablePlugins(PlayScala, DockerPlugin)
+
+dockerBaseImage := "openjdk:17-jdk-slim"
+dockerExposedPorts ++= Seq(9000)
+
+
 // Adds additional packages into Twirl
 // TwirlKeys.templateImports += "com.vishal.controllers._"
 

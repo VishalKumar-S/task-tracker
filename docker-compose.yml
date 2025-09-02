@@ -1,39 +1,68 @@
-version: '3.8'
 services:
   mysql:
     image: mysql:8
+    container_name: mysql_db
     environment:
-      #Tasks-Service
-      MYSQL_USER: taskUser
-      MYSQL_PASSWORD: taskPassword
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: taskdb
-
-#      #Notification-Service
-#      MYSQL_USER_NOTIFY: notifyUser
-#      MYSQL_PASSWORD_NOTIFY: notifyPassword
-#      MYSQL_DATABASE_NOTIFY: notificationdb
+      MYSQL_USER: taskUser
+      MYSQL_PASSWORD: taskPassword
     ports:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
       - ./mysql-init:/docker-entrypoint-initdb.d
+    networks:
+      - mynet
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
+  tasks-service:
+    image: tasks-service:1.0-SNAPSHOT
+    container_name: tasks_service
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "9000:9000"
+    # We pass configuration via command-line arguments to override application.conf.
+    # This allows the same image to work for both local dev (using application.conf)
+    # and containerized environments.
+    command:
+      - "-Dplay.server.pidfile.path=/dev/null"
+      - "-Dslick.dbs.default.db.url=jdbc:mysql://mysql:3306/taskdb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&connectTimeout=60000&socketTimeout=60000"
+      - "-Dslick.dbs.default.db.user=taskUser"
+      - "-Dslick.dbs.default.db.password=taskPassword"
+      - "-Dplay.http.secret.key=${PLAY_HTTP_SECRET_KEY}"
+      - "-Dnotification.service.host=notification-service"
+
+    volumes:
+      - ./logs:/opt/docker/logs
+
+    networks:
+      - mynet
+
+  notification-service:
+    image: notification-service:0.1.0 # This name and version comes from its build.sbt
+    container_name: notification_service
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "50051:50051"
+    command:
+      - "-Ddb.default.url=jdbc:mysql://mysql:3306/notificationdb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
+      - "-Ddb.default.user=notifyUser"
+      - "-Ddb.default.password=notifyPassword"
+    networks:
+      - mynet
 
 volumes:
   mysql-data:
 
-#  tasks-service:
-#    build: ./tasks-service
-#    depends_on:
-#      - mysql
-#    ports:
-#      - "9000:9000"
-
-#  notification-service:
-#    build: ./notification-service
-#    depends_on:
-#      - mysql
-#    ports:
-#      - "50051:50051"
-
+networks:
+  mynet:
