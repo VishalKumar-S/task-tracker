@@ -15,3 +15,23 @@
 2025-09-02 11:18:24 [34mINFO [0;39m [36mp.a.http.HttpErrorHandlerExceptions[0;39m [35m[0;39m Registering exception handler: guice-provision-exception-handler
 2025-09-02 11:18:27 [34mINFO [0;39m [36mplay.api.Play[0;39m [35m[0;39m Application started (Prod) (no global state)
 2025-09-02 11:18:28 [34mINFO [0;39m [36mplay.core.server.PekkoHttpServer[0;39m [35m[0;39m Listening for HTTP on /[0:0:0:0:0:0:0:0]:9000
+2025-09-02 11:37:54 [34mINFO [0;39m [36mp.a.i.l.c.CoordinatedShutdownSupport[0;39m [35m[0;39m Starting synchronous coordinated shutdown with ServerStoppedReason reason and 2147513000 milliseconds timeout
+2025-09-02 11:37:54 [31mWARN [0;39m [36mcom.zaxxer.hikari.pool.HikariPool[0;39m [35m[0;39m db - Thread starvation or clock leap detected (housekeeper delta=1m27s392ms332µs296ns).
+2025-09-02 11:37:54 [34mINFO [0;39m [36mplay.core.server.PekkoHttpServer[0;39m [35m[0;39m Stopping Pekko HTTP server...
+2025-09-02 11:37:54 [34mINFO [0;39m [36mplay.core.server.PekkoHttpServer[0;39m [35m[0;39m Unbinding /[0:0:0:0:0:0:0:0]:9000
+2025-09-02 11:37:54 [34mINFO [0;39m [36mplay.core.server.PekkoHttpServer[0;39m [35m[0;39m Terminating server binding for /[0:0:0:0:0:0:0:0]:9000
+2025-09-02 11:37:54 [34mINFO [0;39m [36mplay.core.server.PekkoHttpServer[0;39m [35m[0;39m Running provided shutdown stop hooks
+2025-09-02 11:37:57 [34mINFO [0;39m [36mp.a.http.HttpErrorHandlerExceptions[0;39m [35m[0;39m Registering exception handler: guice-provision-exception-handler
+2025-09-02 11:38:01 [34mINFO [0;39m [36mplay.api.Play[0;39m [35m[0;39m Application started (Prod) (no global state)
+2025-09-02 11:38:01 [34mINFO [0;39m [36mplay.core.server.PekkoHttpServer[0;39m [35m[0;39m Listening for HTTP on /[0:0:0:0:0:0:0:0]:9000
+2025-09-03 06:05:24 [34mINFO [0;39m [36mp.a.http.HttpErrorHandlerExceptions[0;39m [35m[0;39m Registering exception handler: guice-provision-exception-handler
+2025-09-03 06:05:27 [34mINFO [0;39m [36mplay.api.Play[0;39m [35m[0;39m Application started (Prod) (no global state)
+2025-09-03 06:05:28 [34mINFO [0;39m [36mplay.core.server.PekkoHttpServer[0;39m [35m[0;39m Listening for HTTP on /[0:0:0:0:0:0:0:0]:9000
+2025-09-03 06:08:47 [34mINFO [0;39m [36mp.a.i.l.c.CoordinatedShutdownSupport[0;39m [35m[0;39m Starting synchronous coordinated shutdown with ServerStoppedReason reason and 2147513000 milliseconds timeout
+2025-09-03 06:08:47 [34mINFO [0;39m [36mplay.core.server.PekkoHttpServer[0;39m [35m[0;39m Stopping Pekko HTTP server...
+2025-09-03 06:08:47 [34mINFO [0;39m [36mplay.core.server.PekkoHttpServer[0;39m [35m[0;39m Unbinding /[0:0:0:0:0:0:0:0]:9000
+2025-09-03 06:08:47 [34mINFO [0;39m [36mplay.core.server.PekkoHttpServer[0;39m [35m[0;39m Terminating server binding for /[0:0:0:0:0:0:0:0]:9000
+2025-09-03 06:08:47 [34mINFO [0;39m [36mplay.core.server.PekkoHttpServer[0;39m [35m[0;39m Running provided shutdown stop hooks
+2025-09-03 06:10:16 [34mINFO [0;39m [36mp.a.http.HttpErrorHandlerExceptions[0;39m [35m[0;39m Registering exception handler: guice-provision-exception-handler
+2025-09-03 06:10:19 [34mINFO [0;39m [36mplay.api.Play[0;39m [35m[0;39m Application started (Prod) (no global state)
+2025-09-03 06:10:20 [34mINFO [0;39m [36mplay.core.server.PekkoHttpServer[0;39m [35m[0;39m Listening for HTTP on /[0:0:0:0:0:0:0:0]:9000

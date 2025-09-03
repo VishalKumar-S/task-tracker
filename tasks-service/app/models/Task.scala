@@ -6,4 +6,4 @@ case class Task(id: Long, title: String, dueDate: LocalDateTime, status: String 
 
 case class TaskCreate(title: String, dueDate: LocalDateTime)
 
-case class TaskUpdate(title: Option[String], dueDate: Option[LocalDateTime], status: Option[String], notified: Option[Boolean])
+case class TaskUpdate(title: Option[String] = None, dueDate: Option[LocalDateTime] = None, status: Option[String] = None, notified: Option[Boolean] = None)

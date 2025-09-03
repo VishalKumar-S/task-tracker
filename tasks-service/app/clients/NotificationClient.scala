@@ -6,8 +6,13 @@ import scala.concurrent.{ExecutionContext, Future}
 import java.time.LocalDateTime
 import play.api.inject.ApplicationLifecycle
 
+
+trait NotificationClient {
+  def sendNotification(id: Long, title: String, dueDate: LocalDateTime): Future[NotifyResponse]
+}
+
 @Singleton
-class NotificationClient @Inject()(config: play.api.Configuration, lifecycle: ApplicationLifecycle)(implicit ec: ExecutionContext) {
+class NotificationClientImpl @Inject()(config: play.api.Configuration, lifecycle: ApplicationLifecycle)(implicit ec: ExecutionContext) {
   private val host = config.get[String]("notification.service.host")
   private val port = config.get[Int]("notification.service.port")
 

@@ -3,10 +3,10 @@ services:
     image: mysql:8
     container_name: mysql_db
     environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: taskdb
-      MYSQL_USER: taskUser
-      MYSQL_PASSWORD: taskPassword
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "3306:3306"
     volumes:
@@ -34,9 +34,9 @@ services:
     # and containerized environments.
     command:
       - "-Dplay.server.pidfile.path=/dev/null"
-      - "-Dslick.dbs.default.db.url=jdbc:mysql://mysql:3306/taskdb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&connectTimeout=60000&socketTimeout=60000"
-      - "-Dslick.dbs.default.db.user=taskUser"
-      - "-Dslick.dbs.default.db.password=taskPassword"
+      - "-Dslick.dbs.default.db.url=jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
+      - "-Dslick.dbs.default.db.user=${MYSQL_USER}"
+      - "-Dslick.dbs.default.db.password=${MYSQL_PASSWORD}"
       - "-Dplay.http.secret.key=${PLAY_HTTP_SECRET_KEY}"
       - "-Dnotification.service.host=notification-service"
 
