@@ -35,3 +35,6 @@
 2025-09-03 06:10:16 [34mINFO [0;39m [36mp.a.http.HttpErrorHandlerExceptions[0;39m [35m[0;39m Registering exception handler: guice-provision-exception-handler
 2025-09-03 06:10:19 [34mINFO [0;39m [36mplay.api.Play[0;39m [35m[0;39m Application started (Prod) (no global state)
 2025-09-03 06:10:20 [34mINFO [0;39m [36mplay.core.server.PekkoHttpServer[0;39m [35m[0;39m Listening for HTTP on /[0:0:0:0:0:0:0:0]:9000
+2025-09-07 05:51:42 [34mINFO [0;39m [36mp.a.http.HttpErrorHandlerExceptions[0;39m [35m[0;39m Registering exception handler: guice-provision-exception-handler
+2025-09-07 05:51:45 [34mINFO [0;39m [36mplay.api.Play[0;39m [35m[0;39m Application started (Prod) (no global state)
+2025-09-07 05:51:46 [34mINFO [0;39m [36mplay.core.server.PekkoHttpServer[0;39m [35m[0;39m Listening for HTTP on /[0:0:0:0:0:0:0:0]:9000
