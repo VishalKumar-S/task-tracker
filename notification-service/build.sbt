@@ -8,7 +8,7 @@ lazy val root = (project in file("."))
     scalaVersion := "2.13.16",
 
     libraryDependencies ++= Seq(
-      "com.example" %% "notification-proto" % "0.1.0",           // your local proto jar
+      "com.example" %% "notification-proto" % "0.1.0",           //  local proto jar
       "io.grpc" % "grpc-netty" % "1.62.2",                       // gRPC transport
       "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % "0.11.13", // ScalaPB gRPC runtime
       "mysql" % "mysql-connector-java" % "8.0.33",  // MySQL driver

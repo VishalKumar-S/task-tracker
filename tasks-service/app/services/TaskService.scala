@@ -8,11 +8,8 @@ import java.time.{LocalDateTime, ZoneOffset}
 import clients.NotificationClient
 
 //Dependency Injection (DI), managed by Guice in Play.
-//
 //  You mark classes with @Singleton and put @Inject() in constructors.
-//
 //Guice sees that UserService needs a UserRepository, and UserRepository needs a Database.
-//
 //  At runtime, Guice wires everything together.
 
 @Singleton

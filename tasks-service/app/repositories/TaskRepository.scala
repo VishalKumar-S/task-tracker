@@ -32,28 +32,12 @@ class TaskRepository(val profile: JdbcProfile, val db: JdbcProfile#Backend#Datab
   def findDueTasks(now: LocalDateTime): Future[Seq[Task]] = {
     val in10Minutes = now.plusMinutes(10)
 
-//    println(s"Repository Layer's  Current time (UTC) is ${now} and 10mins later UTC time in Repoository Layer is ${in10Minutes}")
 
     val query = tasks.filter { t =>
       t.dueDate >= now && t.dueDate <= in10Minutes && !t.notified
     }
-
     db.run(query.result)
 
-//    db.run(query.result).map { foundTasks =>
-//      // ==> THIS IS THE NEW DETAILED DEBUGGING BLOCK <==
-//      if (foundTasks.nonEmpty) {
-//        println(s"Repository: Database query found ${foundTasks.size} tasks")
-//        foundTasks.foreach { task =>
-//          println(s"  - ID: ${task.id}, Title: ${task.title}, Due: ${task.dueDate}")
-//        }
-//      } else {
-//        println("Repository: Database query filtered nothing.")
-//      }
-//
-//      // Return the original result to not break the chain
-//      foundTasks
-//    }
   }
 
 

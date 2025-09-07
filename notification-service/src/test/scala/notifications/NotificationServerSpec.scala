@@ -23,7 +23,7 @@ class NotificationServerSpec extends AnyFlatSpec with Matchers with MockFactory{
 
   val server =  new NotificationServiceImpl(mockRepo)
 
-  // mocking the repository layer's response
+
   (mockRepo.create _).expects(where {notif: Notification =>
     notif.taskId == taskId &&
       notif.taskTitle == taskTitle &&
