@@ -12,7 +12,7 @@ trait NotificationClient {
 }
 
 @Singleton
-class NotificationClientImpl @Inject()(config: play.api.Configuration, lifecycle: ApplicationLifecycle)(implicit ec: ExecutionContext) {
+class NotificationClientImpl @Inject()(config: play.api.Configuration, lifecycle: ApplicationLifecycle)(implicit ec: ExecutionContext) extends NotificationClient {
   private val host = config.get[String]("notification.service.host")
   private val port = config.get[Int]("notification.service.port")
 
