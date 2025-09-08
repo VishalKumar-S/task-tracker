@@ -109,9 +109,9 @@ cd notification-service
 sbt docker:publishLocal
 cd ..
 
-# 3. Build the tasks-service Docker image (using Mill)
+# 3. Build the tasks-service Docker image 
 cd tasks-service
-mill tasksservice.docker.publishLocal
+sbt tasksservice.docker.publishLocal
 cd ..
 
 # 4. Start all services using Docker Compose
