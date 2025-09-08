@@ -17,8 +17,16 @@ class TaskController @Inject()(cc: ControllerComponents, taskService: TaskServic
 
   def createTask() = Action.async(parse.json) {
     request => (request.body.validate[TaskCreate]).map{
-      task => taskService.createTask(task).map{
-        id => Ok(Json.obj("id"->id))
+      task => {
+        if(task.dueDate.isBefore(LocalDateTime.now())){
+          Future.successful(BadRequest(Json.obj("error" -> "Due date cannot be in the past.")))
+        }
+
+        else{
+          taskService.createTask(task).map{
+            id => Created(Json.obj("id"->id))
+          }
+        }
       }
     }.getOrElse{
       Future.successful(BadRequest("Invalid JSON"))
@@ -28,9 +36,19 @@ class TaskController @Inject()(cc: ControllerComponents, taskService: TaskServic
 
   def updateTask(id: Long) = Action.async(parse.json){
     request => request.body.validate[TaskUpdate].map{
-      taskUpdate => taskService.updateTask(taskUpdate, id).map{
-        case Some(updatedTask) =>  Ok(Json.toJson(updatedTask))
-        case None => NotFound(Json.obj("error"->s"Invalid Task ID: $id"))
+
+      taskUpdate => {
+        val isDueTaskInvalid = taskUpdate.dueDate.exists(_.isBefore(LocalDateTime.now()))
+        if(isDueTaskInvalid){
+            Future.successful(BadRequest(Json.obj("error" -> "Due date cannot be in the past.")))
+        }
+
+        else{
+          taskService.updateTask(taskUpdate, id).map{
+            case Some(updatedTask) => Ok(Json.toJson(updatedTask))
+            case None => NotFound(Json.obj("error"->s"Invalid Task ID: $id"))
+          }
+        }
       }
     }.getOrElse{
       Future.successful(BadRequest(Json.obj("error" -> "Invalid JSON format for updating a task")))
@@ -41,6 +59,8 @@ class TaskController @Inject()(cc: ControllerComponents, taskService: TaskServic
   def getTaskByStatus(status: String) = Action.async{
     taskService.getTasksByStatus(status).map{ tasks  => Ok(Json.toJson(tasks))}
   }
+
+
 }
 
 
