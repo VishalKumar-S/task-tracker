@@ -24,7 +24,7 @@ class TaskService @Inject()(taskRepository: TaskRepository, notificationClient: 
             title = task.title.getOrElse(existingTask.title),
             dueDate = task.dueDate.getOrElse(existingTask.dueDate),
             status = task.status.getOrElse(existingTask.status),
-            notified = task.notified.getOrElse(existingTask.notified)
+            updatedAt = LocalDateTime.now(ZoneOffset.UTC)
           )
 
         taskRepository.update(updatedTask,id)

@@ -19,8 +19,11 @@ class TaskTableDef(tag: Tag) extends Table[Task](tag, "tasks"){
     def dueDate = column[LocalDateTime]("due_date")
     def status = column[String]("status")
     def notified = column[Boolean]("notified")
+    def createdAt = column[LocalDateTime]("created_at")
+    def updatedAt = column[LocalDateTime]("updated_at")
 
-    override def * = (id, title, dueDate, status, notified) <> (Task.tupled, Task.unapply)
+
+    override def * = (id, title, dueDate, status, notified, createdAt, updatedAt) <> (Task.tupled, Task.unapply)
   }
 
 

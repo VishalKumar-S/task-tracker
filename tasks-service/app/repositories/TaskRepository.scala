@@ -5,7 +5,8 @@ import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-import java.time.LocalDateTime
+import java.time.{LocalDateTime, ZoneOffset}
+
 
 @Singleton
 class TaskRepository(val profile: JdbcProfile, val db: JdbcProfile#Backend#Database)
@@ -14,14 +15,24 @@ class TaskRepository(val profile: JdbcProfile, val db: JdbcProfile#Backend#Datab
   import profile.api._
 
   private val tasks =  TaskTableDef.tasks
-  def create(task: TaskCreate): Future[Long] = db.run(tasks returning tasks.map(_.id)+=Task(id=0,title = task.title,dueDate = task.dueDate))
-  def update(task: Task, id: Long): Future[Option[Task]] = {
+  def create(task: TaskCreate): Future[Long] = {
+    val now = LocalDateTime.now(ZoneOffset.UTC)
+    db.run(tasks returning tasks.map(_.id)+=Task(id=0, title = task.title, dueDate = task.dueDate, createdAt = now, updatedAt = now))
+  }
 
-    val existingTask = tasks.filter(_.id===id)
-    db.run(existingTask.update(task)).flatMap{
-      rowsUpdated =>
-        if (rowsUpdated>0) db.run(existingTask.result.headOption)
-        else Future.successful(None)
+  def update(task: Task, id: Long): Future[Option[Task]] = {
+    val query = tasks.filter(_.id===id)
+
+    // IMPORTANT: The `createdAt` field is intentionally omitted from this update.
+    // The custom `LocalDateTime` mapping in `TaskTableDef` assumes the object's time is in 'Asia/Kolkata'
+    // before converting it to a UTC timestamp for the database. If we were to include `createdAt`
+    // in the update, the existing UTC value read from the DB would be misinterpreted as IST and
+    // incorrectly converted back to a new, different UTC value.
+    // By excluding it, we ensure the original creation timestamp is never altered.    val updateAction = query.map(t=> (t.title, t.dueDate, t.status, t.notified, t.updatedAt)).update((task.title, task.dueDate, task.status, task.notified, task.updatedAt))
+    val updateAction = query.map(t => (t.title, t.dueDate, t.status, t.notified, t.updatedAt)).update((task.title, task.dueDate, task.status, task.notified, task.updatedAt))
+    db.run(updateAction).flatMap{
+      rowsUpdated => if(rowsUpdated > 0) db.run(query.result.headOption)
+      else Future.successful(None)
     }
   }
 

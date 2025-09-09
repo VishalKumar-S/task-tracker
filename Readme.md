@@ -43,13 +43,28 @@ The application follows a microservice architecture, with distinct services for 
 
 A `Task` object contains the following fields:
 
-| Field       | Type          | Description                                   |
-|-------------|---------------|-----------------------------------------------|
-| `id`        | Long          | The unique identifier for the task.           |
-| `title`     | String        | A short description of the task.              |
-| `dueDate`   | LocalDateTime | The date and time the task is due.            |
-| `status`    | String        | A flag indicating task is PENDING/COMPLETED   |
-| `notified`  | Boolean       | A flag indicating due task is notified/not.   |
+| Field       | Type          | Description                                    |
+|-------------|---------------|------------------------------------------------|
+| `id`        | Long          | The unique identifier for the task.            |
+| `title`     | String        | A short description of the task.               |
+| `dueDate`   | LocalDateTime | The date and time the task is due.             |
+| `status`    | String        | A flag indicating task is PENDING/COMPLETED    |
+| `notified`  | Boolean       | A flag indicating due task is notified/not.    |
+| `createdAt` | LocalDateTime | The date and time the task was created.        |
+| `updatedAt` | LocalDateTime | The date and time the task was last updated.   |
+
+
+When the `notification-service` receives a gRPC request for a due task, it creates and saves a `Notification` object in its `notificationdb` database.
+
+A `Notification` object contains the following fields:
+
+| Field       | Type          | Description                                          |
+|-------------|---------------|------------------------------------------------------|
+| `id`        | Long          | The unique identifier for the notification.          |
+| `taskId`    | Long          | The ID of the task this notification is for.         |
+| `taskTitle` | String        | The title of the task at the time of notification.   |
+| `dueDate`   | LocalDateTime | The due date of the task.                            |
+| `createdAt` | LocalDateTime | The date and time the notification was created.      |
 
 
 ---
@@ -111,7 +126,7 @@ cd ..
 
 # 3. Build the tasks-service Docker image 
 cd tasks-service
-sbt tasksservice.docker.publishLocal
+sbt docker:publishLocal
 cd ..
 
 # 4. Start all services using Docker Compose
