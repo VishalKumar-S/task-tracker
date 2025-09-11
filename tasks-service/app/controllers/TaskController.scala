@@ -8,9 +8,19 @@ import scala.concurrent.{Future,ExecutionContext}
 import play.api.libs.json._
 import java.time.LocalDateTime
 
+
+
+
+/**
+ * The controller for handling all HTTP requests related to tasks.
+ * This layer is responsible for request/response validation, JSON serialization,
+ * and pass to the TaskService.
+ */
+
 @Singleton
 class TaskController @Inject()(cc: ControllerComponents, taskService: TaskService)(implicit ec: ExecutionContext) extends AbstractController(cc){
 
+  // Implicit JSON formatters for serializing/deserializing Task-related case classes.
   implicit val taskFormat = Json.format[Task]
   implicit val taskCreateFormat = Json.format[TaskCreate]
   implicit val taskUpdateFormat = Json.format[TaskUpdate]

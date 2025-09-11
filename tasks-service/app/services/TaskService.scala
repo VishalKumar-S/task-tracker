@@ -7,11 +7,11 @@ import scala.concurrent.{ExecutionContext, Future}
 import java.time.{LocalDateTime, ZoneOffset}
 import clients.NotificationClient
 
-//Dependency Injection (DI), managed by Guice in Play.
-//  You mark classes with @Singleton and put @Inject() in constructors.
-//Guice sees that UserService needs a UserRepository, and UserRepository needs a Database.
-//  At runtime, Guice wires everything together.
-
+/**
+ * The primary business logic layer for task-related operations.
+ * This service coordinates interactions between the database (via TaskRepository)
+ * and other external services (like NotificationClient).
+ */
 @Singleton
 class TaskService @Inject()(taskRepository: TaskRepository, notificationClient: NotificationClient)(implicit ec: ExecutionContext) {
   def createTask(task: TaskCreate): Future[Long] = taskRepository.create(task)
@@ -35,6 +35,11 @@ class TaskService @Inject()(taskRepository: TaskRepository, notificationClient: 
 
   def getTasksByStatus(status: String): Future[Seq[Task]] = taskRepository.findByStatus(status)
 
+  /**
+   * Orchestrates the process of handling tasks that are due soon.
+   * It finds due tasks, sends a notification for each one via the gRPC client,
+   * and then marks them as notified in the database.
+   */
   def processDueTasks(): Future[Unit] = {
     val now = LocalDateTime.now(ZoneOffset.UTC)
     taskRepository.findDueTasks(now).flatMap {

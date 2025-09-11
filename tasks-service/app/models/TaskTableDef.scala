@@ -9,8 +9,23 @@ import java.time.{LocalDateTime, ZoneOffset, ZoneId}
 
 class TaskTableDef(tag: Tag) extends Table[Task](tag, "tasks"){
 
+      // IMPORTANT: This custom mapping handles the conversion between the database's `TIMESTAMP`
+      // and the application's `LocalDateTime`. It has a critical behavior:
+      //
+      // 1. On WRITE: It assumes the `LocalDateTime` object represents a time in "Asia/Kolkata"
+      //    and converts it to a UTC timestamp before storing it in the database.
+      // 2. On READ: It reads the UTC timestamp from the database and creates a `LocalDateTime`
+      //    object representing that UTC time.
+      //
+      // This asymmetry is why `createdAt` must be excluded from update operations to avoid
+      // incorrectly re-interpreting a UTC value as an IST value.
+
       implicit val localDateTimeColumnType: BaseColumnType[LocalDateTime] = MappedColumnType.base[LocalDateTime, Timestamp](
+
+      // Write path: Assume IST -> Convert to UTC
       ldt => Timestamp.from(ldt.atZone(ZoneId.of("Asia/Kolkata")).toInstant()),
+
+      // Read path:  Read UTC -> Create UTC-based LocalDateTime
       ts => LocalDateTime.ofInstant(ts.toInstant, ZoneOffset.UTC)
     )
 

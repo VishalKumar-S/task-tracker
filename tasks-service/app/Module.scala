@@ -8,8 +8,13 @@ import slick.jdbc.JdbcProfile
 import scala.concurrent.ExecutionContext
 
 class Module(environment: Environment, configuration: Configuration) extends AbstractModule {
+/**
+ * Configures the dependency injection bindings for the application.
+ * This method is used for bindings that cannot be automatically discovered by Guice,
+ * such as binding an interface (`NotificationClient`) to a specific implementation (`NotificationClientImpl`).
+ */
+
   override def configure(): Unit = {
-    bind(classOf[TaskRepository]).toProvider(classOf[TaskRepositoryProvider])
     bind(classOf[NotificationClient]).to(classOf[NotificationClientImpl])
   }
 }

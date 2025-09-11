@@ -27,7 +27,9 @@ class TaskRepositorySpec extends AnyFlatSpec with Matchers{
 
   it should "update a task if exists" in {
     val id = Await.result(repo.create(TaskCreate("Test Task", LocalDateTime.now(ZoneOffset.UTC))), 2.seconds)
-    val updatedTask = Await.result(repo.update(Task(id, "Updated Task", LocalDateTime.now(ZoneOffset.UTC)), id), 2.seconds)
+
+    val now = LocalDateTime.now(ZoneOffset.UTC)
+    val updatedTask = Await.result(repo.update(Task(id, "Updated Task", dueDate =  now, createdAt = now, updatedAt = now), id), 2.seconds)
 
     updatedTask.head.title shouldBe "Updated Task"
   }

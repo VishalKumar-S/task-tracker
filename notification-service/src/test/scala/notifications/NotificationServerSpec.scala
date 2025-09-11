@@ -12,6 +12,7 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 
 
 class NotificationServerSpec extends AnyFlatSpec with Matchers with MockFactory{
+  // Use the global execution context for Futures in this test suite.
   implicit val ec: ExecutionContext = ExecutionContext.global
 
   val mockRepo = mock[NotificationRepository]
@@ -23,7 +24,8 @@ class NotificationServerSpec extends AnyFlatSpec with Matchers with MockFactory{
 
   val server =  new NotificationServiceImpl(mockRepo)
 
-
+  // We expect the `create` method to be called once with a Notification object that matches our test data.
+  // It should return a Future containing the successfully saved notification.
   (mockRepo.create _).expects(where {notif: Notification =>
     notif.taskId == taskId &&
       notif.taskTitle == taskTitle &&
@@ -34,9 +36,6 @@ class NotificationServerSpec extends AnyFlatSpec with Matchers with MockFactory{
 
   val response = server.sendNotification(NotifyRequest(taskId, taskTitle, dueDate.toString()))
   "NotificationServiceImpl" should "return Future.Success when repo.create successfully saves the notification and returns the notification object" in {
-
-
-
     val result = Await.result(response, scala.concurrent.duration.Duration.Inf)
 
     result.status shouldBe "SUCCESS"

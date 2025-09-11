@@ -30,6 +30,15 @@ class TaskServiceSpec extends AnyFlatSpec with Matchers with MockFactory with Be
     mockService = new TaskService(mockRepo, mockNotification)
   }
 
+
+  object TestServiceData {
+    val now = LocalDateTime.now(ZoneOffset.UTC)
+
+    def createTask(id: Long, title: String = "Test Task", dueDate: LocalDateTime = now) = {
+      Task(id, title, dueDate, createdAt = now, updatedAt = now)
+    }
+  }
+
   "TaskService" should "create a task and return it's ID" in {
     val task = TaskCreate("Test Task", LocalDateTime.now())
 
@@ -42,7 +51,7 @@ class TaskServiceSpec extends AnyFlatSpec with Matchers with MockFactory with Be
   }
 
   it should "update a task when if exists" in {
-    val existingTask = Task(1L, "Test task", LocalDateTime.now())
+    val existingTask = TestServiceData.createTask(1L)
 
     val taskUpdate = TaskUpdate(status = Some("COMPLETED"))
 
@@ -59,7 +68,7 @@ class TaskServiceSpec extends AnyFlatSpec with Matchers with MockFactory with Be
   }
 
   it should "find a task by status if exists and return the task" in {
-    val existingTask = Task(1L, "Test task", LocalDateTime.now())
+    val existingTask = TestServiceData.createTask(1L)
     (mockRepo.findByStatus _).expects("PENDING") returning(Future.successful(Seq(existingTask)))
 
     val result = Await.result(mockService.getTasksByStatus("PENDING"), 2.seconds)
@@ -72,15 +81,14 @@ class TaskServiceSpec extends AnyFlatSpec with Matchers with MockFactory with Be
   it should "Call notification client, for tasks due within 10 minutes and update them as Notified" in {
     val dueTaskTime = LocalDateTime.now(ZoneOffset.UTC).plusMinutes(5)
 
-    (mockRepo.findDueTasks _).expects(*) returning(Future.successful(Seq(Task(id = 1L, title = "Test Task", dueDate = dueTaskTime))))
+    val dueTask = TestServiceData.createTask(id = 1L, dueDate = dueTaskTime)
+
+    (mockRepo.findDueTasks _).expects(*) returning(Future.successful(Seq(dueTask)))
     (mockNotification.sendNotification _).expects(1L, "Test Task", dueTaskTime) returning Future.successful(NotifyResponse("SUCCESS"))
     (mockRepo.markAsNotified _).expects(1L) returning Future.successful(1)
 
     val result = Await.result(mockService.processDueTasks(), 2.seconds)
 
     result shouldBe (())
-
-
-
   }
 }
