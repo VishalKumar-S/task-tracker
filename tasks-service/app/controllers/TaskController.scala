@@ -53,6 +53,10 @@ class TaskController @Inject()(cc: ControllerComponents, taskService: TaskServic
             Future.successful(BadRequest(Json.obj("error" -> "Due date cannot be in the past.")))
         }
 
+        else if (taskUpdate.status.exists(s => !Set("COMPLETED", "PENDING").contains(s))){
+           Future.successful(BadRequest(Json.obj("error" -> "Task completion status can either be COMPLETED or PENDING")))
+        }
+
         else{
           taskService.updateTask(taskUpdate, id).map{
             case Some(updatedTask) => Ok(Json.toJson(updatedTask))
@@ -67,7 +71,11 @@ class TaskController @Inject()(cc: ControllerComponents, taskService: TaskServic
 
 
   def getTaskByStatus(status: String) = Action.async{
-    taskService.getTasksByStatus(status).map{ tasks  => Ok(Json.toJson(tasks))}
+    if (!Set("COMPLETED", "PENDING").contains(status)){
+      Future.successful(BadRequest(Json.obj("error" -> "Task completion status can either be COMPLETED or PENDING")))
+    }
+
+    else {taskService.getTasksByStatus(status).map{ tasks  => Ok(Json.toJson(tasks))}}
   }
 
 
