@@ -58,7 +58,7 @@ class TaskServiceSpec extends AnyFlatSpec with Matchers with MockFactory with Be
     val updatedTask = existingTask.copy(status = "COMPLETED")
 
     (mockRepo.findById _).expects(1L) returning(Future.successful(Some(existingTask)))
-    (mockRepo.update _).expects(updatedTask, 1L) returning(Future.successful(Some(updatedTask)))
+    (mockRepo.update _).expects(*, 1L) returning(Future.successful(Some(updatedTask)))
 
 
     val result = Await.result(mockService.updateTask(taskUpdate, 1L), 2.seconds)
