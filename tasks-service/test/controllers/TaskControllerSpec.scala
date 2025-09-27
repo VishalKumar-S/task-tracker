@@ -24,7 +24,7 @@ class TaskControllerSpec extends AnyFlatSpec with Matchers with MockFactory with
 
 
   implicit val localDateTimeWrites: Writes[LocalDateTime] = new Writes[LocalDateTime]{
-    def writes(d: LocalDateTime): JsValue = JsString(d.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")))
+    def writes(d: LocalDateTime): JsValue = JsString(d.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"))+"Z")
   }
 
     implicit val taskFormat = Json.format[Task]
@@ -48,7 +48,7 @@ class TaskControllerSpec extends AnyFlatSpec with Matchers with MockFactory with
 
 
   object TestServiceData {
-    val now = LocalDateTime.now()
+    val now = LocalDateTime.now(ZoneOffset.UTC)
 
     def createTask(id: Long, title: String = "Test Task", dueDate: LocalDateTime = now, status: String = "PENDING") = {
       Task(id, title, dueDate, status, notified = false, createdAt = now, updatedAt = now)
@@ -90,7 +90,7 @@ class TaskControllerSpec extends AnyFlatSpec with Matchers with MockFactory with
     errors("obj.title") should include ("error.expected.jsstring")
 
     errors should contain key  "obj.dueDate"
-    errors("obj.dueDate") should include ("Invalid JSON format. Please ensure dueDate is in format 'YYYY-MM-DDTHH:MM:SS' (e.g., '2025-12-25T10:30:00')")
+    errors("obj.dueDate") should include ("Invalid datetime format. Supported formats: '2025-12-25T10:00:00Z' (UTC), '2025-12-25T15:30:00+05:30' (with timezone), or '2025-12-25T10:00:00' (assumed UTC)")
 
   }
 

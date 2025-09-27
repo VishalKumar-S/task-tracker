@@ -6,7 +6,7 @@ import models._
 import javax.inject._
 import scala.concurrent.{Future,ExecutionContext}
 import play.api.libs.json._
-import java.time.LocalDateTime
+import java.time.{Instant, LocalDateTime, ZoneOffset}
 import java.time.format.DateTimeFormatter
 import scala.util.Try
 
@@ -65,9 +65,12 @@ class TaskController @Inject()(cc: ControllerComponents, taskService: TaskServic
 
 
   def validateDueDate(dueDate: LocalDateTime): ValidationResult = {
-    if (dueDate.isAfter(LocalDateTime.now().plusYears(MAX_YEARS_FUTURE))) ValidationFailure(s"Due date cannot be more than ${MAX_YEARS_FUTURE} years in the future")
 
-    else if (dueDate.isBefore(LocalDateTime.now())) ValidationFailure("Due date cannot be in the past.")
+    val nowUtc = LocalDateTime.now(ZoneOffset.UTC)
+
+    if (dueDate.isAfter(nowUtc.plusYears(MAX_YEARS_FUTURE))) ValidationFailure(s"Due date cannot be more than ${MAX_YEARS_FUTURE} years in the future")
+
+    else if (dueDate.isBefore(nowUtc)) ValidationFailure(s"Due date cannot be in the past.")
 
     else ValidationSuccess
 
@@ -118,19 +121,36 @@ class TaskController @Inject()(cc: ControllerComponents, taskService: TaskServic
 
   // Custom Reads for LocalDateTime
   implicit val localDateTimeReads: Reads[LocalDateTime] = Reads[LocalDateTime]{
-    json => json.validate[String].flatMap{
+    json => json.validate[String].flatMap {
       str =>
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
-        Try(LocalDateTime.parse(str, formatter)).toOption  match {
+        Try{
+        if (str.endsWith("Z")) {
+          // Handle UTC with Z suffix: "2025-12-25T10:00:00Z"
+          LocalDateTime.ofInstant(Instant.parse(str), ZoneOffset.UTC)
+        }
+
+        else if (str.contains("+") || str.contains("-")) {
+          // Handle timezone offset: "2025-12-25T15:30:00+05:30"
+          LocalDateTime.ofInstant(Instant.parse(str), ZoneOffset.UTC)
+        }
+
+        else {
+          // Handle plain format (assume UTC): "2025-12-25T10:00:00"
+          LocalDateTime.parse(str, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"))
+        }
+    }.toOption  match {
           case Some(dt) => JsSuccess(dt)
-          case None =>  JsError("Invalid JSON format. Please ensure dueDate is in format 'YYYY-MM-DDTHH:MM:SS' (e.g., '2025-12-25T10:30:00')")
+          case None =>  JsError("Invalid datetime format. Supported formats: " +
+            "'2025-12-25T10:00:00Z' (UTC), '2025-12-25T15:30:00+05:30' (with timezone), " +
+            "or '2025-12-25T10:00:00' (assumed UTC)")
         }
     }
   }
 
 
   implicit val localDateTimeWrites: Writes[LocalDateTime] = new Writes[LocalDateTime]{
-    def writes(d: LocalDateTime): JsValue = JsString(d.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")))
+    // Always output UTC time with 'Z' suffix to indicate UTC
+    def writes(d: LocalDateTime): JsValue = JsString(d.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")) + "Z")
   }
 
   // Standard formatters for the model classes. Play generates these automatically.
@@ -184,7 +204,7 @@ class TaskController @Inject()(cc: ControllerComponents, taskService: TaskServic
         )
 
 
-        validateTaskUpdate(sanitizedUpdate) match{
+        validateTaskUpdate(sanitizedUpdate) match {
         case ValidationSuccess =>  taskService.updateTask(sanitizedUpdate, id).map{
           case Some(updatedTask) => Ok(Json.toJson(updatedTask))
           case None => NotFound(errorMessage(s"Invalid Task ID: $id"))

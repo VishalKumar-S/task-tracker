@@ -8,13 +8,18 @@ import models._
 import java.time.{LocalDateTime, ZoneOffset}
 import scala.concurrent.duration._
 import slick.jdbc.H2Profile.api._
+import java.time.temporal.ChronoUnit
 
 class TaskRepositorySpec extends AnyFlatSpec with Matchers{
+
+  sys.props.put("test.environment", "true")
   implicit val ec: ExecutionContext = ExecutionContext.global
   val db = H2Profile.api.Database.forConfig("h2mem1")
   val repo = new TaskRepository(H2Profile, db)
 
   override def withFixture(test: NoArgTest) = {
+    // Proper test isolation: drop and recreate table for each test
+    Await.result(db.run(TaskTableDef.tasks.schema.dropIfExists), 2.seconds)
     Await.result(db.run(TaskTableDef.tasks.schema.createIfNotExists), 2.seconds)
     super.withFixture(test)
   }
@@ -52,14 +57,17 @@ class TaskRepositorySpec extends AnyFlatSpec with Matchers{
 
   }
 
+
   it should "find tasks which will be due within 10 minutes and return those tasks" in {
     val now = LocalDateTime.now(ZoneOffset.UTC)
     val in8Minutes = now.plusMinutes(8)
 
+
     Await.result(repo.create(TaskCreate("Task Due Soon", in8Minutes)), 2.seconds)
+    Await.result(repo.create(TaskCreate("Task Due Later", now.plusHours(1))), 2.seconds)
+
 
     val dueTasks = Await.result(repo.findDueTasks(now), 2.seconds)
-
     dueTasks.head.title shouldBe "Task Due Soon"
 
   }

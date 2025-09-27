@@ -57,11 +57,9 @@ class TaskRepository @Inject()(protected val dbConfigProvider: DatabaseConfigPro
     val query = tasks.filter(_.id===id)
 
     // IMPORTANT: The `createdAt` field is intentionally omitted from this update.
-    // The custom `LocalDateTime` mapping in `TaskTableDef` assumes the object's time is in 'Asia/Kolkata'
-    // before converting it to a UTC timestamp for the database. If we were to include `createdAt`
-    // in the update, the existing UTC value read from the DB would be misinterpreted as IST and
-    // incorrectly converted back to a new, different UTC value.
-    // By excluding it, we ensure the original creation timestamp is never altered.
+    // Reason: `createdAt` should never be modified after a task is created - it represents
+    // the immutable creation timestamp. Only `updatedAt` should change during updates.
+    // By excluding `createdAt` from the update query, we ensure it remains exactly as originally stored.
     val updateAction = query.map(t => (t.title, t.dueDate, t.status, t.notified, t.updatedAt)).update((task.title, task.dueDate, task.status, task.notified, task.updatedAt))
     db.run(updateAction).flatMap{
       rowsUpdated => if(rowsUpdated > 0) db.run(query.result.headOption)
@@ -79,7 +77,9 @@ class TaskRepository @Inject()(protected val dbConfigProvider: DatabaseConfigPro
    * Finds all tasks that are due within the next 10 minutes and have not yet been notified.
    * This is used by the background scheduler to identify tasks needing a notification.
    * @param now The current UTC time to calculate the due window from.
+   * Note: All datetime comparisons are done in UTC since that's how data is stored.
    */
+
   def findDueTasks(now: LocalDateTime): Future[Seq[Task]] = {
     val in10Minutes = now.plusMinutes(10)
 
@@ -90,7 +90,6 @@ class TaskRepository @Inject()(protected val dbConfigProvider: DatabaseConfigPro
     db.run(query.result)
 
   }
-
 
   def markAsNotified(id: Long): Future[Int] = db.run(tasks.filter(_.id ===id).map(_.notified).update(true))
 
