@@ -48,13 +48,13 @@ class TaskRepository @Inject()(protected val dbConfigProvider: DatabaseConfigPro
 
 
   private val tasks =  TaskTableDef.tasks
-  def create(task: TaskCreate): Future[Long] = {
+  def create(task: TaskCreate, ownerId: Long): Future[Long] = {
     val now = LocalDateTime.now(ZoneOffset.UTC)
-    db.run(tasks returning tasks.map(_.id)+=Task(id=0, title = task.title, dueDate = task.dueDate, createdAt = now, updatedAt = now))
+    db.run(tasks returning tasks.map(_.id)+=Task(id=0, title = task.title, dueDate = task.dueDate, createdAt = now, updatedAt = now, ownerId = ownerId))
   }
 
-  def update(task: Task, id: Long): Future[Option[Task]] = {
-    val query = tasks.filter(_.id===id)
+  def update(task: Task, id: Long, ownerId: Long): Future[Option[Task]] = {
+    val query = tasks.filter(t=> t.id===id && t.owner_id===ownerId)
 
     // IMPORTANT: The `createdAt` field is intentionally omitted from this update.
     // Reason: `createdAt` should never be modified after a task is created - it represents
@@ -67,9 +67,9 @@ class TaskRepository @Inject()(protected val dbConfigProvider: DatabaseConfigPro
     }
   }
 
-  def findByStatus(status: String): Future[Seq[Task]] = db.run(tasks.filter(_.status===status).result)
+  def findByStatus(status: String, ownerId: Long): Future[Seq[Task]] = db.run(tasks.filter(t=>t.status===status && t.owner_id===ownerId).result)
 
-  def findById(id: Long): Future[Option[Task]] = db.run(tasks.filter(_.id===id).result.headOption)
+  def findById(id: Long, ownerId: Long): Future[Option[Task]] = db.run(tasks.filter(t=>t.id===id && t.owner_id===ownerId).result.headOption)
 
 
 

@@ -14,10 +14,10 @@ import clients.NotificationClient
  */
 @Singleton
 class TaskService @Inject()(taskRepository: TaskRepository, notificationClient: NotificationClient)(implicit ec: ExecutionContext) {
-  def createTask(task: TaskCreate): Future[Long] = taskRepository.create(task)
+  def createTask(task: TaskCreate, ownerId: Long): Future[Long] = taskRepository.create(task, ownerId)
 
-  def updateTask(task: TaskUpdate, id: Long): Future[Option[Task]] = {
-    taskRepository.findById(id).flatMap{
+  def updateTask(task: TaskUpdate, id: Long, ownerId: Long): Future[Option[Task]] = {
+    taskRepository.findById(id, ownerId).flatMap{
       case Some(existingTask) =>
         val updatedTask =
           existingTask.copy(
@@ -27,13 +27,13 @@ class TaskService @Inject()(taskRepository: TaskRepository, notificationClient: 
             updatedAt = LocalDateTime.now(ZoneOffset.UTC)
           )
 
-        taskRepository.update(updatedTask,id)
+        taskRepository.update(updatedTask,id, ownerId)
       case None => Future.successful(None)
     }
 
   }
 
-  def getTasksByStatus(status: String): Future[Seq[Task]] = taskRepository.findByStatus(status)
+  def getTasksByStatus(status: String, ownerId: Long): Future[Seq[Task]] = taskRepository.findByStatus(status, ownerId)
 
   /**
    * Orchestrates the process of handling tasks that are due soon.

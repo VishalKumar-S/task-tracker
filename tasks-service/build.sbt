@@ -24,7 +24,14 @@ lazy val root = (project in file("."))
       "org.scalatest" %% "scalatest" % "3.2.19" % Test,
       "org.scalamock" %% "scalamock" % "6.0.0" % Test,
       "org.mockito" %% "mockito-scala" % "1.17.31" % Test,
-      "com.h2database" % "h2" % "2.2.224" % Test // in-memory DB for repo tests
+      "com.h2database" % "h2" % "2.2.224" % Test, // in-memory DB for repo tests
+
+
+
+      //JWT and password Hashing Authentication Dependencies
+      "com.pauldijou" %% "jwt-play" % "5.0.0",
+      "org.mindrot" % "jbcrypt" % "0.4"
+
 
     )
   )

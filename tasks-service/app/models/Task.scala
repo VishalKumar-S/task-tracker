@@ -13,9 +13,10 @@ import java.time.LocalDateTime
  * @param notified A flag indicating if a notification has been sent for this task.
  * @param createdAt The timestamp when the task was created.
  * @param updatedAt The timestamp when the task was last updated.
+ * @param ownerId The ID of the user who owns this task.
  */
 
-case class Task(id: Long, title: String, dueDate: LocalDateTime, status: String = "PENDING", notified: Boolean = false, createdAt: LocalDateTime, updatedAt: LocalDateTime)
+case class Task(id: Long, title: String, dueDate: LocalDateTime, status: String = "PENDING", notified: Boolean = false, createdAt: LocalDateTime, updatedAt: LocalDateTime, ownerId: Long)
 
 
 

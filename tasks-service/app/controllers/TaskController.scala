@@ -9,7 +9,7 @@ import play.api.libs.json._
 import java.time.{Instant, LocalDateTime, ZoneOffset}
 import java.time.format.DateTimeFormatter
 import scala.util.Try
-
+import actions.AuthenticatedAction
 
 
 
@@ -20,7 +20,7 @@ import scala.util.Try
  */
 
 @Singleton
-class TaskController @Inject()(cc: ControllerComponents, taskService: TaskService)(implicit ec: ExecutionContext) extends AbstractController(cc){
+class TaskController @Inject()(cc: ControllerComponents, taskService: TaskService, authenticatedAction: AuthenticatedAction)(implicit ec: ExecutionContext) extends AbstractController(cc){
 
   // --- Constants for Validation ---
   // Defines the only acceptable states for a task's status.
@@ -165,16 +165,16 @@ class TaskController @Inject()(cc: ControllerComponents, taskService: TaskServic
 
 
 
-  def createTask() = Action.async(parse.json) {
+  def createTask() = authenticatedAction.async(parse.json) {
     request =>
-
+      val ownerId = request.user.id
       (request.body.validate[TaskCreate]) match {
       case JsSuccess(task,_) =>
         val sanitizedTask = task.copy(title = sanitiseTitle(task.title))
         validateTaskCreate(sanitizedTask) match{
         case ValidationSuccess =>
 
-          taskService.createTask(sanitizedTask).map{
+          taskService.createTask(sanitizedTask, ownerId).map{
           id => Created(Json.obj("id"->id))
         }
 
@@ -196,8 +196,10 @@ class TaskController @Inject()(cc: ControllerComponents, taskService: TaskServic
     }
   }
 
-  def updateTask(id: Long) = Action.async(parse.json){
-    request => request.body.validate[TaskUpdate] match {
+  def updateTask(id: Long) = authenticatedAction.async(parse.json){
+    request =>
+      val ownerId = request.user.id
+      request.body.validate[TaskUpdate] match {
     case JsSuccess(taskUpdate,_) =>
         val sanitizedUpdate = taskUpdate.copy(
           title = taskUpdate.title.map(sanitiseTitle)
@@ -205,7 +207,7 @@ class TaskController @Inject()(cc: ControllerComponents, taskService: TaskServic
 
 
         validateTaskUpdate(sanitizedUpdate) match {
-        case ValidationSuccess =>  taskService.updateTask(sanitizedUpdate, id).map{
+        case ValidationSuccess =>  taskService.updateTask(sanitizedUpdate, id, ownerId).map{
           case Some(updatedTask) => Ok(Json.toJson(updatedTask))
           case None => NotFound(errorMessage(s"Invalid Task ID: $id"))
         }
@@ -228,9 +230,10 @@ class TaskController @Inject()(cc: ControllerComponents, taskService: TaskServic
   }
 
 
-  def getTaskByStatus(status: String) = Action.async{
+  def getTaskByStatus(status: String) = authenticatedAction.async{ request =>
+    val ownerId = request.user.id
     validateStatus(status) match{
-      case ValidationSuccess => taskService.getTasksByStatus(status).map{ tasks  => Ok(Json.toJson(tasks))}
+      case ValidationSuccess => taskService.getTasksByStatus(status, ownerId).map{ tasks  => Ok(Json.toJson(tasks))}
       case ValidationFailure(message) => Future.successful(BadRequest(errorMessage(message)))
     }
   }
