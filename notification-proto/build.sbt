@@ -5,7 +5,7 @@ organization := "com.example"
 version := "0.1.0"
 scalaVersion := "2.13.12"
 
-enablePlugins(ProtocPlugin)
+enablePlugins(ProtocPlugin)F
 
 Compile / PB.targets := Seq(
   scalapb.gen(grpc = true) -> (Compile / sourceManaged).value

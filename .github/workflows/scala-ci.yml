@@ -7,72 +7,16 @@ on:
     branches: [main]
 
 jobs:
-  # Job 1: Build and test tasks-service
-  tasks-service:
-    name: Tasks Service CI
+  build-and-test:
+    name: ${{ matrix.service.name }} CI
     runs-on: ubuntu-latest
-
-    steps:
-      # Step 1: Checkout code
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      # Step 2: Setup JDK
-      - name: Setup JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-          cache: 'sbt'
-
-      # Step 3: Install sbt
-      - name: Install sbt
-        run: |
-          curl -L -o sbt.deb https://scala.jfrog.io/artifactory/debian/sbt-1.9.8.deb
-          sudo dpkg -i sbt.deb
-          sudo apt-get update
-          sudo apt-get install sbt
-
-      # Step 4: Check formatting
-      - name: Check code formatting
-        working-directory: ./tasks-service
-        run: sbt scalafmtCheckAll scalafmtSbtCheck
-
-      # Step 5: Compile
-      - name: Compile code
-        working-directory: ./tasks-service
-        run: sbt compile Test/compile
-
-      # Step 6: Run tests with coverage
-      - name: Run tests with coverage
-        working-directory: ./tasks-service
-        run: sbt coverage test coverageReport
-
-      # Step 7: Upload coverage
-      - name: Upload coverage report
-        uses: codecov/codecov-action@v4
-        with:
-          files: ./tasks-service/target/scala-2.13/scoverage-report/scoverage.xml
-          flags: tasks-service
-          fail_ci_if_error: false
-
-      # Step 8: Run scapegoat
-      - name: Run static analysis
-        working-directory: ./tasks-service
-        run: sbt scapegoat
-        continue-on-error: true
-
-      # Step 9: Archive scapegoat report
-      - name: Archive static analysis report
-        uses: actions/upload-artifact@v4
-        with:
-          name: tasks-service-scapegoat-report
-          path: ./tasks-service/target/scala-2.13/scapegoat-report/
-
-  # Job 2: Build and test notification-service
-  notification-service:
-    name: Notification Service CI
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false # Don't cancel other jobs if one fails
+      matrix:
+        # Define the services to run the build steps for.
+        service:
+          - { name: "notification-service", dir: "notification-service" }
+          - { name: "tasks-service", dir: "tasks-service" }
 
     steps:
       - name: Checkout code
@@ -85,39 +29,44 @@ jobs:
           java-version: '17'
           cache: 'sbt'
 
-      - name: Install sbt
-        run: |
-          curl -L -o sbt.deb https://scala.jfrog.io/artifactory/debian/sbt-1.9.8.deb
-          sudo dpkg -i sbt.deb
-          sudo apt-get update
-          sudo apt-get install sbt
+      # Use the official action to install sbt - faster and more reliable
+      - name: Setup sbt
+        uses: sbt-actions/setup-sbt@v1
+
+      # This step is the key to solving your dependency issue.
+      # It builds the 'notification-proto' project and publishes it to the local
+      # Ivy cache on the CI runner, making it available to other modules.
+      - name: Build and Publish Shared Proto
+        run: sbt notification-proto/publishLocal
+
+      # --- Per-Service Steps ---
 
       - name: Check code formatting
-        working-directory: ./notification-service
+        working-directory: ./${{ matrix.service.dir }}
         run: sbt scalafmtCheckAll scalafmtSbtCheck
 
       - name: Compile code
-        working-directory: ./notification-service
+        working-directory: ./${{ matrix.service.dir }}
         run: sbt compile Test/compile
 
       - name: Run tests with coverage
-        working-directory: ./notification-service
+        working-directory: ./${{ matrix.service.dir }}
         run: sbt coverage test coverageReport
 
       - name: Upload coverage report
         uses: codecov/codecov-action@v4
         with:
-          files: ./notification-service/target/scala-2.13/scoverage-report/scoverage.xml
-          flags: notification-service
+          files: ./${{ matrix.service.dir }}/target/scala-2.13/scoverage-report/scoverage.xml
+          flags: ${{ matrix.service.name }}
           fail_ci_if_error: false
 
       - name: Run static analysis
-        working-directory: ./notification-service
+        working-directory: ./${{ matrix.service.dir }}
         run: sbt scapegoat
         continue-on-error: true
 
       - name: Archive static analysis report
         uses: actions/upload-artifact@v4
         with:
-          name: notification-service-scapegoat-report
-          path: ./notification-service/target/scala-2.13/scapegoat-report/
+          name: ${{ matrix.service.name }}-scapegoat-report
+          path: ./${{ matrix.service.dir }}/target/scala-2.13/scapegoat-report/
