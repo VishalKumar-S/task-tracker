@@ -12,7 +12,14 @@ import java.time.LocalDateTime
  * @param createdAt The timestamp when the user was created.
  * @param updatedAt The timestamp when the user was last updated.
  */
-case class User(id: Long, username: String, email: String, passwordHash: String, createdAt: LocalDateTime, updatedAt: LocalDateTime)
+case class User(
+  id: Long,
+  username: String,
+  email: String,
+  passwordHash: String,
+  createdAt: LocalDateTime,
+  updatedAt: LocalDateTime
+)
 
 /** DTO for a user registration request. */
 case class UserCreate(username: String, email: String, password: String)

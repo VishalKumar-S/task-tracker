@@ -9,23 +9,17 @@ import java.time.{LocalDateTime, ZoneOffset}
 import scala.concurrent.duration._
 import slick.jdbc.H2Profile.api._
 
-
-
-
-class NotificationRepositorySpec extends AnyFlatSpec with Matchers{
+class NotificationRepositorySpec extends AnyFlatSpec with Matchers {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
-  val db = H2Profile.api.Database.forConfig("h2mem1")
+  val db   = H2Profile.api.Database.forConfig("h2mem1")
   val repo = new NotificationRepository(H2Profile, db)
-
 
   override def withFixture(test: NoArgTest) = {
     Await.result(db.run(NotificationTable.notifications.schema.createIfNotExists), 2.seconds)
     super.withFixture(test)
   }
-
-
 
   // FlatSpec Template
 
@@ -47,8 +41,6 @@ class NotificationRepositorySpec extends AnyFlatSpec with Matchers{
     val result2 = Await.result(repo.create(notify2), 2.seconds)
 
     result1.id should not be result2.id
-
-
 
   }
 

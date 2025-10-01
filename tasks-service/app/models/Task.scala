@@ -1,7 +1,6 @@
 package models
 import java.time.LocalDateTime
 
-
 /**
  * Represents a full Task entity as it is stored in the database.
  * This is the primary domain model for a task.
@@ -16,15 +15,23 @@ import java.time.LocalDateTime
  * @param ownerId The ID of the user who owns this task.
  */
 
-case class Task(id: Long, title: String, dueDate: LocalDateTime, status: String = "PENDING", notified: Boolean = false, createdAt: LocalDateTime, updatedAt: LocalDateTime, ownerId: Long)
-
-
-
-
+case class Task(
+  id: Long,
+  title: String,
+  dueDate: LocalDateTime,
+  status: String = "PENDING",
+  notified: Boolean = false,
+  createdAt: LocalDateTime,
+  updatedAt: LocalDateTime,
+  ownerId: Long
+)
 
 /** Data Transfer Object (DTO) for creating a new task via an API request. */
 case class TaskCreate(title: String, dueDate: LocalDateTime)
 
-
 /** Data Transfer Object (DTO) for updating an existing task. All fields are optional. */
-case class TaskUpdate(title: Option[String] = None, dueDate: Option[LocalDateTime] = None, status: Option[String] = None)
+case class TaskUpdate(
+  title: Option[String] = None,
+  dueDate: Option[LocalDateTime] = None,
+  status: Option[String] = None
+)

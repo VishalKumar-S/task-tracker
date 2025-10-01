@@ -1,6 +1,10 @@
 import com.typesafe.sbt.packager.archetypes.JavaAppPackaging
 import com.typesafe.sbt.packager.docker.DockerPlugin
 
+
+ThisBuild / scapegoatVersion := "3.1.3"
+
+
 lazy val root = (project in file("."))
   .settings(
     name := "notification-service",

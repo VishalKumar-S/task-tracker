@@ -15,7 +15,7 @@ import java.time.Clock
  * @param config The application configuration, used to get the JWT secret key and expiration.
  */
 @Singleton
-class AuthService @Inject()(config: Configuration) {
+class AuthService @Inject() (config: Configuration) {
 
   // --- Configuration and Setup ---
 
@@ -28,7 +28,6 @@ class AuthService @Inject()(config: Configuration) {
 
   implicit val clock: Clock = Clock.systemUTC()
 
-
   // --- Password Management ---
 
   /**
@@ -38,9 +37,8 @@ class AuthService @Inject()(config: Configuration) {
    * @param password The plain-text password to hash.
    * @return A securely hashed password string (e.g., "$2a$10$...") that you can safely store in the database.
    */
-  def hashPassword(password: String): String = {
+  def hashPassword(password: String): String =
     BCrypt.hashpw(password, BCrypt.gensalt())
-  }
 
   /**
    * Checks if a plain-text password from a login attempt matches a stored BCrypt hash.
@@ -49,10 +47,8 @@ class AuthService @Inject()(config: Configuration) {
    * @param hash The stored password hash from the `users` table.
    * @return true if the password is correct, false otherwise.
    */
-  def checkPassword(candidate: String, hash: String): Boolean = {
+  def checkPassword(candidate: String, hash: String): Boolean =
     BCrypt.checkpw(candidate, hash)
-  }
-
 
   // --- JWT (Token) Management ---
 
@@ -78,9 +74,10 @@ class AuthService @Inject()(config: Configuration) {
    * @param token The JWT string from the `Authorization` header.
    * @return The user ID (as a Long) if the token is valid, or None if it's invalid or expired.
    */
-  def validateToken(token: String): Option[Long] = {
-    Jwt.decode(token, secretKey, Seq(algorithm)).toOption
+  def validateToken(token: String): Option[Long] =
+    Jwt
+      .decode(token, secretKey, Seq(algorithm))
+      .toOption
       .flatMap(_.subject)
       .flatMap(idString => Try(idString.toLong).toOption)
-  }
 }

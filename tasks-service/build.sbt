@@ -2,6 +2,9 @@ name := "tasks-service"
 organization := "com.vishal"
 version := "1.0-SNAPSHOT"
 
+
+ThisBuild / scapegoatVersion := "3.1.3"
+
 lazy val root = (project in file("."))
   .enablePlugins(PlayScala)
   .settings(

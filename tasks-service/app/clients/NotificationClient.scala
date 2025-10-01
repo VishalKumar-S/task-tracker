@@ -6,13 +6,14 @@ import scala.concurrent.{ExecutionContext, Future}
 import java.time.LocalDateTime
 import play.api.inject.ApplicationLifecycle
 
-
 trait NotificationClient {
   def sendNotification(id: Long, title: String, dueDate: LocalDateTime): Future[NotifyResponse]
 }
 
 @Singleton
-class NotificationClientImpl @Inject()(config: play.api.Configuration, lifecycle: ApplicationLifecycle)(implicit ec: ExecutionContext) extends NotificationClient {
+class NotificationClientImpl @Inject() (config: play.api.Configuration, lifecycle: ApplicationLifecycle)(implicit
+  ec: ExecutionContext
+) extends NotificationClient {
   private val host = config.get[String]("notification.service.host")
   private val port = config.get[Int]("notification.service.port")
 
@@ -34,8 +35,6 @@ class NotificationClientImpl @Inject()(config: play.api.Configuration, lifecycle
   // Register a stop hook with Play's application lifecycle.
   // This ensures that the gRPC channel is shut down gracefully when the application stops,
   // preventing resource leaks.
-  lifecycle.addStopHook {() => Future.successful(channel.shutdown())}
-
-
+  lifecycle.addStopHook(() => Future.successful(channel.shutdown()))
 
 }

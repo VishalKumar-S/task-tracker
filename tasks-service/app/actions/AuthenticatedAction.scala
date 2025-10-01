@@ -8,7 +8,6 @@ import play.api.mvc._
 import repositories.UserRepository
 import services.AuthService
 
-
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -23,9 +22,13 @@ import scala.concurrent.{ExecutionContext, Future}
  * @param ec The execution context for asynchronous operations.
  */
 
-
-class AuthenticatedAction @Inject()(bodyParser: BodyParsers.Default, authService: AuthService, userRepo: UserRepository)(implicit ec: ExecutionContext) extends ActionBuilder[AuthenticatedRequest, AnyContent]{
-  override def parser: BodyParser[AnyContent] = bodyParser
+class AuthenticatedAction @Inject() (
+  bodyParser: BodyParsers.Default,
+  authService: AuthService,
+  userRepo: UserRepository
+)(implicit ec: ExecutionContext)
+    extends ActionBuilder[AuthenticatedRequest, AnyContent] {
+  override def parser: BodyParser[AnyContent]               = bodyParser
   override protected def executionContext: ExecutionContext = ec
 
   private val bearerTokenRegex = "Bearer (.+)".r
@@ -33,9 +36,8 @@ class AuthenticatedAction @Inject()(bodyParser: BodyParsers.Default, authService
   override def invokeBlock[A](request: Request[A], block: AuthenticatedRequest[A] => Future[Result]): Future[Result] = {
     val maybeToken = request.headers.get(HeaderNames.AUTHORIZATION).flatMap {
       case bearerTokenRegex(token) => Some(token)
-      case _ => None
+      case _                       => None
     }
-
 
     maybeToken match {
       case Some(token) =>
@@ -43,7 +45,7 @@ class AuthenticatedAction @Inject()(bodyParser: BodyParsers.Default, authService
           case Some(userId) =>
             userRepo.findById(userId).flatMap {
               case Some(user) => block(new AuthenticatedRequest(user, request))
-              case None => Future.successful(Results.Unauthorized(Json.obj("message" -> "Invalid credentials.")))
+              case None       => Future.successful(Results.Unauthorized(Json.obj("message" -> "Invalid credentials.")))
             }
           case None => Future.successful(Results.Unauthorized(Json.obj("message" -> "Invalid or expired token.")))
         }
@@ -54,7 +56,3 @@ class AuthenticatedAction @Inject()(bodyParser: BodyParsers.Default, authService
 
   }
 }
-
-
-
-

@@ -15,5 +15,4 @@ import play.api.mvc.{Request, WrappedRequest}
  * @tparam A The body type of the request.
  */
 
-
 class AuthenticatedRequest[A](val user: User, request: Request[A]) extends WrappedRequest[A](request)

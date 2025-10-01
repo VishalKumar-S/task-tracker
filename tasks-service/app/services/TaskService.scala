@@ -13,11 +13,13 @@ import clients.NotificationClient
  * and other external services (like NotificationClient).
  */
 @Singleton
-class TaskService @Inject()(taskRepository: TaskRepository, notificationClient: NotificationClient)(implicit ec: ExecutionContext) {
+class TaskService @Inject() (taskRepository: TaskRepository, notificationClient: NotificationClient)(implicit
+  ec: ExecutionContext
+) {
   def createTask(task: TaskCreate, ownerId: Long): Future[Long] = taskRepository.create(task, ownerId)
 
-  def updateTask(task: TaskUpdate, id: Long, ownerId: Long): Future[Option[Task]] = {
-    taskRepository.findById(id, ownerId).flatMap{
+  def updateTask(task: TaskUpdate, id: Long, ownerId: Long): Future[Option[Task]] =
+    taskRepository.findById(id, ownerId).flatMap {
       case Some(existingTask) =>
         val updatedTask =
           existingTask.copy(
@@ -27,11 +29,9 @@ class TaskService @Inject()(taskRepository: TaskRepository, notificationClient: 
             updatedAt = LocalDateTime.now(ZoneOffset.UTC)
           )
 
-        taskRepository.update(updatedTask,id, ownerId)
+        taskRepository.update(updatedTask, id, ownerId)
       case None => Future.successful(None)
     }
-
-  }
 
   def getTasksByStatus(status: String, ownerId: Long): Future[Seq[Task]] = taskRepository.findByStatus(status, ownerId)
 
@@ -42,17 +42,15 @@ class TaskService @Inject()(taskRepository: TaskRepository, notificationClient: 
    */
   def processDueTasks(): Future[Unit] = {
     val now = LocalDateTime.now(ZoneOffset.UTC)
-    taskRepository.findDueTasks(now).flatMap {
-      dueTasks =>
-        val notificationFutures = dueTasks.map {
-          dueTask =>
-            for {
-              response <- notificationClient.sendNotification(dueTask.id, dueTask.title, dueTask.dueDate)
-              _ = println(s"Task id: ${dueTask.id} status: ${response.status}")
-              _ <- taskRepository.markAsNotified(dueTask.id)
-            } yield ()
-        }
-        Future.sequence(notificationFutures).map(_ => ())
+    taskRepository.findDueTasks(now).flatMap { dueTasks =>
+      val notificationFutures = dueTasks.map { dueTask =>
+        for {
+          response <- notificationClient.sendNotification(dueTask.id, dueTask.title, dueTask.dueDate)
+          _         = println(s"Task id: ${dueTask.id} status: ${response.status}")
+          _        <- taskRepository.markAsNotified(dueTask.id)
+        } yield ()
+      }
+      Future.sequence(notificationFutures).map(_ => ())
     }
   }
 }

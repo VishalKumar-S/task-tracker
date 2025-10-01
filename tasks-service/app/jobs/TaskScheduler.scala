@@ -7,19 +7,16 @@ import scala.concurrent.duration._
 import services.TaskService
 import play.api.Configuration
 
-
 @Singleton
-class TaskScheduler @Inject()(taskService: TaskService, actorSystem: ActorSystem, configuration: Configuration)(implicit ec: ExecutionContext) {
+class TaskScheduler @Inject() (taskService: TaskService, actorSystem: ActorSystem, configuration: Configuration)(
+  implicit ec: ExecutionContext
+) {
 
   private val initialDelay: FiniteDuration = configuration.get[FiniteDuration]("jobs.TaskScheduler.initialDelay")
-  private val interval: FiniteDuration = configuration.get[FiniteDuration]("jobs.TaskScheduler.interval")
+  private val interval: FiniteDuration     = configuration.get[FiniteDuration]("jobs.TaskScheduler.interval")
 
   actorSystem.scheduler.scheduleAtFixedRate(
     initialDelay = initialDelay,
     interval = interval
-  ) {
-    () =>
-      taskService.processDueTasks()
-  }
+  )(() => taskService.processDueTasks())
 }
-
