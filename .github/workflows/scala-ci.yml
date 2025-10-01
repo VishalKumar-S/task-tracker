@@ -5,15 +5,51 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
+  # Job 1: Build notification-proto once
+  build-proto:
+    name: Build notification-proto
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'sbt'
+
+      - name: Setup sbt
+        uses: sbt/setup-sbt@v1
+
+      - name: Build and Publish notification-proto
+        working-directory: ./notification-proto
+        run: |
+          echo "Building notification-proto..."
+          sbt clean compile publishLocal
+          echo "Proto published successfully"
+          echo "Checking Ivy local cache..."
+          ls -la ~/.ivy2/local/com.example/
+
+      # Cache the proto artifacts for service jobs
+      - name: Cache Proto Artifacts
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.ivy2/local
+          key: proto-${{ github.sha }}
+
+  # Job 2: Build and test services (runs after proto is built)
   build-and-test:
     name: ${{ matrix.service.name }} CI
     runs-on: ubuntu-latest
+    needs: build-proto  # Wait for proto job to complete
     strategy:
-      fail-fast: false # Don't cancel other jobs if one fails
+      fail-fast: false
       matrix:
-        # Define the services to run the build steps for.
         service:
           - { name: "notification-service", dir: "notification-service" }
           - { name: "tasks-service", dir: "tasks-service" }
@@ -29,15 +65,21 @@ jobs:
           java-version: '17'
           cache: 'sbt'
 
-      # Use the official action to install sbt - faster and more reliable
       - name: Setup sbt
-        uses: sbt-actions/setup-sbt@v1
+        uses: sbt/setup-sbt@v1
 
-      # This step is the key to solving your dependency issue.
-      # It builds the 'notification-proto' project and publishes it to the local
-      # Ivy cache on the CI runner, making it available to other modules.
-      - name: Build and Publish Shared Proto
-        run: sbt notification-proto/publishLocal
+      # Restore proto artifacts from cache
+      - name: Restore Proto Artifacts
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.ivy2/local
+          key: proto-${{ github.sha }}
+          fail-on-cache-miss: true
+
+      - name: Verify Proto Available
+        run: |
+          echo "Checking for proto artifacts in Ivy cache..."
+          ls -la ~/.ivy2/local/com.example/ || echo "ERROR: Proto not found in cache!"
 
       # --- Per-Service Steps ---
 
@@ -59,6 +101,7 @@ jobs:
           files: ./${{ matrix.service.dir }}/target/scala-2.13/scoverage-report/scoverage.xml
           flags: ${{ matrix.service.name }}
           fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Run static analysis
         working-directory: ./${{ matrix.service.dir }}
@@ -67,6 +110,8 @@ jobs:
 
       - name: Archive static analysis report
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: ${{ matrix.service.name }}-scapegoat-report
           path: ./${{ matrix.service.dir }}/target/scala-2.13/scapegoat-report/
+          if-no-files-found: warn
