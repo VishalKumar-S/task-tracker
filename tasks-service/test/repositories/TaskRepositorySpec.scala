@@ -50,7 +50,7 @@ class TaskRepositorySpec extends AnyFlatSpec with Matchers {
 
     val now = LocalDateTime.now(ZoneOffset.UTC)
     val updatedTask = Await.result(
-      taskRepo.update(
+      taskRepo.updateForOwner(
         Task(id, "Updated Task", dueDate = now, createdAt = now, updatedAt = now, ownerId = ownerId),
         id,
         ownerId
@@ -66,7 +66,7 @@ class TaskRepositorySpec extends AnyFlatSpec with Matchers {
 
     val id =
       Await.result(taskRepo.create(TaskCreate("Test Task", LocalDateTime.now(ZoneOffset.UTC)), ownerId), 2.seconds)
-    val taskReturned = Await.result(taskRepo.findById(id, ownerId), 2.seconds)
+    val taskReturned = Await.result(taskRepo.findByIdForOwner(id, ownerId), 2.seconds)
 
     taskReturned.head.title shouldBe "Test Task"
   }
@@ -77,7 +77,7 @@ class TaskRepositorySpec extends AnyFlatSpec with Matchers {
 
     Await.result(taskRepo.create(TaskCreate("Test Task", LocalDateTime.now(ZoneOffset.UTC)), ownerId), 2.seconds)
 
-    val pendingTasks = Await.result(taskRepo.findByStatus("PENDING", ownerId), 2.seconds)
+    val pendingTasks = Await.result(taskRepo.findByStatusForOwner("PENDING", ownerId), 2.seconds)
     pendingTasks.map(_.status).distinct shouldBe Seq("PENDING")
 
   }

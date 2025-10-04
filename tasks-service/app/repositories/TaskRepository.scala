@@ -56,7 +56,7 @@ class TaskRepository @Inject() (protected val dbConfigProvider: DatabaseConfigPr
     )
   }
 
-  def update(task: Task, id: Long, ownerId: Long): Future[Option[Task]] = {
+  def updateForOwner(task: Task, id: Long, ownerId: Long): Future[Option[Task]] = {
     val query = tasks.filter(t => t.id === id && t.owner_id === ownerId)
 
     // IMPORTANT: The `createdAt` field is intentionally omitted from this update.
@@ -72,11 +72,33 @@ class TaskRepository @Inject() (protected val dbConfigProvider: DatabaseConfigPr
     }
   }
 
-  def findByStatus(status: String, ownerId: Long): Future[Seq[Task]] =
+  def updateAny(task: Task, id: Long): Future[Option[Task]] = {
+    val query = tasks.filter(t => t.id === id)
+
+    // IMPORTANT: The `createdAt` field is intentionally omitted from this update.
+    // Reason: `createdAt` should never be modified after a task is created - it represents
+    // the immutable creation timestamp. Only `updatedAt` should change during updates.
+    // By excluding `createdAt` from the update query, we ensure it remains exactly as originally stored.
+    val updateAction = query
+      .map(t => (t.title, t.dueDate, t.status, t.notified, t.updatedAt))
+      .update((task.title, task.dueDate, task.status, task.notified, task.updatedAt))
+    db.run(updateAction).flatMap { rowsUpdated =>
+      if (rowsUpdated > 0) db.run(query.result.headOption)
+      else Future.successful(None)
+    }
+  }
+
+  def findByStatusForOwner(status: String, ownerId: Long): Future[Seq[Task]] =
     db.run(tasks.filter(t => t.status === status && t.owner_id === ownerId).result)
 
-  def findById(id: Long, ownerId: Long): Future[Option[Task]] =
+  def findByStatusAny(status: String): Future[Seq[Task]] =
+    db.run(tasks.filter(t => t.status === status).result)
+
+  def findByIdForOwner(id: Long, ownerId: Long): Future[Option[Task]] =
     db.run(tasks.filter(t => t.id === id && t.owner_id === ownerId).result.headOption)
+
+  def findByIdAny(id: Long): Future[Option[Task]] =
+    db.run(tasks.filter(t => t.id === id).result.headOption)
 
   /**
    * Finds all tasks that are due within the next 10 minutes and have not yet been notified.

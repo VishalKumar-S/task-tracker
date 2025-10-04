@@ -7,7 +7,6 @@ import play.api.libs.json.Json
 import play.api.mvc._
 import repositories.UserRepository
 import services.AuthService
-
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -42,11 +41,14 @@ class AuthenticatedAction @Inject() (
     maybeToken match {
       case Some(token) =>
         authService.validateToken(token) match {
-          case Some(userId) =>
-            userRepo.findById(userId).flatMap {
-              case Some(user) => block(new AuthenticatedRequest(user, request))
-              case None       => Future.successful(Results.Unauthorized(Json.obj("message" -> "Invalid credentials.")))
+          case Some(tokenPayload) =>
+            userRepo.findById(tokenPayload.userId).flatMap {
+              case Some(user) =>
+                val authContext = new AuthContext(tokenPayload.userId, tokenPayload.roles)
+                block(new AuthenticatedRequest(authContext, request))
+              case None => Future.successful(Results.Unauthorized(Json.obj("message" -> "Invalid credentials.")))
             }
+
           case None => Future.successful(Results.Unauthorized(Json.obj("message" -> "Invalid or expired token.")))
         }
 

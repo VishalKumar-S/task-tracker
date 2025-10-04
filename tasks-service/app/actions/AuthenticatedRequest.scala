@@ -3,6 +3,8 @@ package actions
 import models.User
 import play.api.mvc.{Request, WrappedRequest}
 
+case class AuthContext(userId: Long, roles: Set[String])
+
 /**
  * A custom request wrapper that includes the authenticated user's information.
  *
@@ -15,4 +17,4 @@ import play.api.mvc.{Request, WrappedRequest}
  * @tparam A The body type of the request.
  */
 
-class AuthenticatedRequest[A](val user: User, request: Request[A]) extends WrappedRequest[A](request)
+class AuthenticatedRequest[A](val authContext: AuthContext, request: Request[A]) extends WrappedRequest[A](request)

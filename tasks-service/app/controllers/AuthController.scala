@@ -31,9 +31,10 @@ class AuthController @Inject() (cc: ControllerComponents, authService: AuthServi
             )
           ),
         userCreate =>
-          userRepository.create(userCreate, authService.hashPassword(userCreate.password)).map { user =>
-            Created(Json.obj("message" -> s"User '${user.username}' created successfully."))
-          }
+          for {
+            user <- userRepository.create(userCreate, authService.hashPassword(userCreate.password))
+            _    <- userRepository.assignUserRole(user.id, "USER")
+          } yield Created(Json.obj("message" -> s"User '${user.username}' created successfully."))
       )
   }
 
@@ -46,11 +47,13 @@ class AuthController @Inject() (cc: ControllerComponents, authService: AuthServi
             BadRequest(Json.obj("message" -> "Invalid JSON format for login.", "details" -> JsError.toJson(errors)))
           ),
         userLogin =>
-          userRepository.findByUsername(userLogin.username).map {
+          userRepository.findByUsername(userLogin.username).flatMap {
             case Some(existingUser) if authService.checkPassword(userLogin.password, existingUser.passwordHash) =>
-              val token = authService.generateToken(existingUser)
-              Ok(Json.toJson(LoginResponse(token)))
-            case _ => Unauthorized(Json.obj("message" -> "Invalid username or password."))
+              userRepository.findUserRole(existingUser.id).map { roles =>
+                val token = authService.generateToken(existingUser, roles)
+                Ok(Json.toJson(LoginResponse(token)))
+              }
+            case _ => Future.successful(Unauthorized(Json.obj("message" -> "Invalid username or password.")))
           }
       )
   }

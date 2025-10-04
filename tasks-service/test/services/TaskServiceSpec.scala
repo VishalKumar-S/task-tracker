@@ -59,8 +59,8 @@ class TaskServiceSpec extends AnyFlatSpec with Matchers with MockFactory with Be
 
     val ownerId = TestAuth.testUser.id
 
-    (mockRepo.findById _).expects(1L, ownerId) returning (Future.successful(Some(existingTask)))
-    (mockRepo.update _).expects(*, 1L, ownerId) returning (Future.successful(Some(updatedTask)))
+    (mockRepo.findByIdForOwner _).expects(1L, ownerId) returning (Future.successful(Some(existingTask)))
+    (mockRepo.updateForOwner _).expects(*, 1L, ownerId) returning (Future.successful(Some(updatedTask)))
 
     val result = Await.result(mockService.updateTask(taskUpdate, 1L, ownerId), 2.seconds)
 
@@ -73,7 +73,7 @@ class TaskServiceSpec extends AnyFlatSpec with Matchers with MockFactory with Be
 
     val ownerId = TestAuth.testUser.id
 
-    (mockRepo.findByStatus _).expects("PENDING", ownerId) returning (Future.successful(Seq(existingTask)))
+    (mockRepo.findByStatusForOwner _).expects("PENDING", ownerId) returning (Future.successful(Seq(existingTask)))
 
     val result = Await.result(mockService.getTasksByStatus("PENDING", ownerId), 2.seconds)
 

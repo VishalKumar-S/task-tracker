@@ -1,6 +1,6 @@
 package repositories
 
-import models.{User, UserTableDef, UserCreate, UserLogin}
+import models.{User, UserTableDef, UserCreate, UserLogin, UserRoles, UserRolesTableDef, RolesTableDef}
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
 import javax.inject.{Inject, Singleton}
@@ -41,7 +41,9 @@ class UserRepository @Inject() (protected val dbConfigProvider: DatabaseConfigPr
         }
     })
 
-  private val users = UserTableDef.users
+  private val users     = UserTableDef.users
+  private val roles     = RolesTableDef.roles
+  private val userRoles = UserRolesTableDef.userRoles
 
   def create(userCreate: UserCreate, passwordHash: String): Future[User] = {
     val now = LocalDateTime.now(ZoneOffset.UTC)
@@ -62,5 +64,26 @@ class UserRepository @Inject() (protected val dbConfigProvider: DatabaseConfigPr
 
   def findById(id: Long): Future[Option[User]] =
     db.run(users.filter(_.id === id).result.headOption)
+
+  def assignUserRole(userId: Long, roleName: String): Future[Int] = {
+    val actionTree = for {
+      roleOpt <- roles.filter(_.name === roleName).result.headOption
+      result <- roleOpt match {
+                  case Some(role) => userRoles += UserRoles(userId, role.id, LocalDateTime.now(ZoneOffset.UTC))
+                  case None       => DBIO.failed(new Exception("Role not found"))
+                }
+    } yield result
+    db.run(actionTree.transactionally)
+  }
+
+  def findUserRole(id: Long): Future[Seq[String]] = {
+
+    val actionTree = for {
+      ur <- userRoles.filter(_.userId === id)
+      r  <- roles if ur.roleId === r.id
+    } yield r.name
+
+    db.run(actionTree.result)
+  }
 
 }

@@ -19,7 +19,7 @@ class TaskService @Inject() (taskRepository: TaskRepository, notificationClient:
   def createTask(task: TaskCreate, ownerId: Long): Future[Long] = taskRepository.create(task, ownerId)
 
   def updateTask(task: TaskUpdate, id: Long, ownerId: Long): Future[Option[Task]] =
-    taskRepository.findById(id, ownerId).flatMap {
+    taskRepository.findByIdForOwner(id, ownerId).flatMap {
       case Some(existingTask) =>
         val updatedTask =
           existingTask.copy(
@@ -29,11 +29,29 @@ class TaskService @Inject() (taskRepository: TaskRepository, notificationClient:
             updatedAt = LocalDateTime.now(ZoneOffset.UTC)
           )
 
-        taskRepository.update(updatedTask, id, ownerId)
+        taskRepository.updateForOwner(updatedTask, id, ownerId)
       case None => Future.successful(None)
     }
 
-  def getTasksByStatus(status: String, ownerId: Long): Future[Seq[Task]] = taskRepository.findByStatus(status, ownerId)
+  def updateAnyTask(task: TaskUpdate, id: Long): Future[Option[Task]] =
+    taskRepository.findByIdAny(id).flatMap {
+      case Some(existingTask) =>
+        val updatedTask =
+          existingTask.copy(
+            title = task.title.getOrElse(existingTask.title),
+            dueDate = task.dueDate.getOrElse(existingTask.dueDate),
+            status = task.status.getOrElse(existingTask.status),
+            updatedAt = LocalDateTime.now(ZoneOffset.UTC)
+          )
+
+        taskRepository.updateAny(updatedTask, id)
+      case None => Future.successful(None)
+    }
+
+  def getTasksByStatus(status: String, ownerId: Long): Future[Seq[Task]] =
+    taskRepository.findByStatusForOwner(status, ownerId)
+
+  def getTasksByAnyStatus(status: String): Future[Seq[Task]] = taskRepository.findByStatusAny(status)
 
   /**
    * Orchestrates the process of handling tasks that are due soon.

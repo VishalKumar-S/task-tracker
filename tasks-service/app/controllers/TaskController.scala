@@ -135,7 +135,8 @@ class TaskController @Inject() (
   implicit val taskUpdateFormat = Json.format[TaskUpdate]
 
   def createTask() = authenticatedAction.async(parse.json) { request =>
-    val ownerId = request.user.id
+    val ownerId = request.authContext.userId
+
     request.body.validate[TaskCreate] match {
       case JsSuccess(task, _) =>
         val sanitizedTask = task.copy(title = sanitiseTitle(task.title))
@@ -161,7 +162,9 @@ class TaskController @Inject() (
   }
 
   def updateTask(id: Long) = authenticatedAction.async(parse.json) { request =>
-    val ownerId = request.user.id
+    val ownerId   = request.authContext.userId
+    val ownerRole = request.authContext.roles
+
     request.body.validate[TaskUpdate] match {
       case JsSuccess(taskUpdate, _) =>
         val sanitizedUpdate = taskUpdate.copy(
@@ -170,7 +173,12 @@ class TaskController @Inject() (
 
         validateTaskUpdate(sanitizedUpdate) match {
           case ValidationSuccess =>
-            taskService.updateTask(sanitizedUpdate, id, ownerId).map {
+            val isAdmin = ownerRole.contains("ADMIN")
+            val updateFuture =
+              if (isAdmin) taskService.updateAnyTask(sanitizedUpdate, id)
+              else taskService.updateTask(sanitizedUpdate, id, ownerId)
+
+            updateFuture.map {
               case Some(updatedTask) => Ok(Json.toJson(updatedTask))
               case None              => NotFound(errorMessage(s"Invalid Task ID: $id"))
             }
@@ -193,9 +201,17 @@ class TaskController @Inject() (
   }
 
   def getTaskByStatus(status: String) = authenticatedAction.async { request =>
-    val ownerId = request.user.id
+    val ownerId   = request.authContext.userId
+    val ownerRole = request.authContext.roles
+
     validateStatus(status) match {
-      case ValidationSuccess          => taskService.getTasksByStatus(status, ownerId).map(tasks => Ok(Json.toJson(tasks)))
+      case ValidationSuccess =>
+        val isAdmin = ownerRole.contains("ADMIN")
+        val statusFuture =
+          if (isAdmin) taskService.getTasksByAnyStatus(status)
+          else taskService.getTasksByStatus(status, ownerId)
+
+        statusFuture.map(tasks => Ok(Json.toJson(tasks)))
       case ValidationFailure(message) => Future.successful(BadRequest(errorMessage(message)))
     }
   }

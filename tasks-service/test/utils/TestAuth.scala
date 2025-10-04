@@ -1,6 +1,6 @@
 package utils
 
-import actions.{AuthenticatedAction, AuthenticatedRequest}
+import actions.{AuthenticatedAction, AuthenticatedRequest, AuthContext}
 import models.User
 import play.api.mvc._
 
@@ -23,10 +23,13 @@ object TestAuth {
    */
   def successful(cc: ControllerComponents)(implicit ec: ExecutionContext): AuthenticatedAction =
     new AuthenticatedAction(new BodyParsers.Default(cc.parsers), null, null)(ec) {
+
+      val testUserAuthContext = new AuthContext(testUser.id, Set("USER"))
+
       override def invokeBlock[A](
         request: Request[A],
         block: AuthenticatedRequest[A] => Future[Result]
       ): Future[Result] =
-        block(new AuthenticatedRequest(testUser, request))
+        block(new AuthenticatedRequest(testUserAuthContext, request))
     }
 }

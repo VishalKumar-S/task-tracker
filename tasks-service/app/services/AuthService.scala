@@ -1,5 +1,6 @@
 package services
 
+import play.api.libs.json._
 import javax.inject.{Inject, Singleton}
 import models.User
 import org.mindrot.jbcrypt.BCrypt
@@ -59,9 +60,13 @@ class AuthService @Inject() (config: Configuration) {
    * @param user The user for whom to generate the token.
    * @return A signed JWT string. This is what you send back to the client.
    */
-  def generateToken(user: User): String = {
+  def generateToken(user: User, roles: Seq[String]): String = {
+
+    val contentJson: JsValue = Json.obj("roles" -> roles)
+
     val claim = JwtClaim(
-      subject = Some(user.id.toString)
+      subject = Some(user.id.toString),
+      content = Json.stringify(contentJson)
     ).issuedNow.expiresIn(expirationInSeconds)
 
     Jwt.encode(claim, secretKey, algorithm)
@@ -74,10 +79,21 @@ class AuthService @Inject() (config: Configuration) {
    * @param token The JWT string from the `Authorization` header.
    * @return The user ID (as a Long) if the token is valid, or None if it's invalid or expired.
    */
-  def validateToken(token: String): Option[Long] =
-    Jwt
-      .decode(token, secretKey, Seq(algorithm))
-      .toOption
-      .flatMap(_.subject)
-      .flatMap(idString => Try(idString.toLong).toOption)
+
+  case class TokenPayLoad(userId: Long, roles: Set[String])
+
+  def validateToken(token: String): Option[TokenPayLoad] = {
+    val claim = Jwt.decode(token, secretKey, Seq(algorithm))
+
+    for {
+      claim         <- claim.toOption
+      id            <- claim.subject
+      payloadString <- Option(claim.content)
+      payload       <- Json.parse(payloadString).asOpt[JsObject]
+      rolesJsArray  <- (payload \ "roles").asOpt[JsArray]
+      rolesSequence <- rolesJsArray.asOpt[Seq[String]]
+    } yield TokenPayLoad(id.toLong, rolesSequence.toSet)
+
+  }
+
 }
