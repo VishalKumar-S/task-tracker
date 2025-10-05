@@ -62,11 +62,16 @@ class TaskService @Inject() (taskRepository: TaskRepository, notificationClient:
     val now = LocalDateTime.now(ZoneOffset.UTC)
     taskRepository.findDueTasks(now).flatMap { dueTasks =>
       val notificationFutures = dueTasks.map { dueTask =>
-        for {
+        val notificationAttempt = for {
           response <- notificationClient.sendNotification(dueTask.id, dueTask.title, dueTask.dueDate)
           _         = println(s"Task id: ${dueTask.id} status: ${response.status}")
           _        <- taskRepository.markAsNotified(dueTask.id)
         } yield ()
+
+        notificationAttempt.recover {
+          case e: Exception =>
+            println(s"Error sending notification for task ${dueTask.id}: ${e.getMessage}")
+        }
       }
       Future.sequence(notificationFutures).map(_ => ())
     }

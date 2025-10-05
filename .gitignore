@@ -8,3 +8,7 @@ logs/
 project/
 
 target/
+
+certs/*.key
+
+certs/*.srl

@@ -11,6 +11,10 @@ import com.typesafe.config.ConfigFactory
 import notifications.models._
 import notifications.repositories._
 import slick.jdbc.{JdbcProfile, MySQLProfile}
+import io.grpc.netty.NettyServerBuilder
+import io.grpc.netty.GrpcSslContexts
+import java.io.File
+import io.netty.handler.ssl.ClientAuth
 
 class NotificationServiceImpl(repository: NotificationRepository)(implicit ec: ExecutionContext)
     extends NotificationServiceGrpc.NotificationService {
@@ -58,8 +62,26 @@ object NotificationServer {
 
     flyway.migrate()
 
-    val server = ServerBuilder
+    // When running with sbt, the working directory is the root of the `notification-service` module.
+    // This path resolves to `notification-service/certs/`.
+    val certPath = sys.props.getOrElse("certs.path", "certs")
+
+    // The `../` navigates up one level from the working directory to the project root (`task-tracker/`),
+    // then into the shared `certs` directory.
+    val caPath = sys.props.getOrElse("ca.path", "../certs")
+
+    val sslContext = GrpcSslContexts
+      .forServer(
+        new File(s"$certPath/notification.crt"),
+        new File(s"$certPath/notification.key")
+      )
+      .trustManager(new File(s"$caPath/ca.crt"))
+      .clientAuth(ClientAuth.REQUIRE)
+      .build()
+
+    val server = NettyServerBuilder
       .forPort(50051)
+      .sslContext(sslContext)
       .addService(
         NotificationServiceGrpc
           .bindService(new NotificationServiceImpl(new NotificationRepository(MySQLProfile, db)), ec)

@@ -39,6 +39,9 @@ services:
 
     volumes:
       - ./logs:/opt/docker/logs
+      - ./tasks-service/certs:/app/certs:ro    # task’s own certs (read-only)
+      - ./certs:/app/ca:ro                     # common CA (read-only)
+
 
     networks:
       - mynet
@@ -55,6 +58,11 @@ services:
       - "-Ddb.default.url=jdbc:mysql://mysql:3306/notificationdb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
       - "-Ddb.default.user=notifyUser"
       - "-Ddb.default.password=notifyPassword"
+
+    volumes:
+      - ./notification-service/certs:/app/certs:ro  # server’s own certs
+      - ./certs:/app/ca:ro                         # root CA shared
+
     networks:
       - mynet
 
