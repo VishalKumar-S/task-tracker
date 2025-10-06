@@ -10,5 +10,5 @@ project/
 target/
 
 certs/*.key
-
 certs/*.srl
+certs/*.crt
