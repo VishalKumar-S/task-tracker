@@ -1,7 +1,8 @@
 # Task Tracker Application
 
-A secure, microservices-based application for managing tasks with a robust, multi-layered security model. The project is built with Scala, Play Framework and gRPC, including JWT-based authentication, Role-Based Access Control (RBAC), and encrypted inter-service communication with mTLS.
 ---
+A secure, microservices-based application for managing tasks with a robust, multi-layered security model. The project is built with Scala, Play Framework and gRPC, including JWT-based authentication, Role-Based Access Control (RBAC), and encrypted inter-service communication with mTLS.
+
 
 ## Table of Contents
 
@@ -20,7 +21,7 @@ A secure, microservices-based application for managing tasks with a robust, mult
     - [2. Configure Environment](#2-configure-environment)
     - [3. Generate TLS Certificates](#3-generate-tls-certificates-for-mtls)
     - [4. Build and Run](#4-build-and-run)
-
+- [Continuous Integration (CI) Pipeline](#continuous-integration-ci-pipeline)
 ---
 
 ## Architecture
@@ -101,6 +102,20 @@ Stores the tasks created by users.
 | `ownerId`   | Long          | Foreign key referencing the `users` table to indicate the owner. |
 
 
+**Refresh Token Table (`refresh_tokens`)**
+Stores refresh tokens for users, enabling persistent sessions without storing long-lived access tokens.
+
+| Field         | Type          | Description                                                                  |
+|---------------|---------------|------------------------------------------------------------------------------|
+| `id`          | Long          | The unique identifier for the refresh token.                                 |
+| `userId`      | Long          | Foreign key referencing the `users` table.                                   |
+| `tokenHash`   | String        | A secure hash of the refresh token string, used for lookups.                 |
+| `expiresAt`   | LocalDateTime | The timestamp when this token will expire and can no longer be used.         |
+| `createdAt`   | LocalDateTime | The timestamp when this token was created.                                   |
+| `updatedAt`   | LocalDateTime | The timestamp when this token was last updated (e.g., during rotation).      |
+| `isRevoked`   | Boolean       | A flag to indicate if the token has been manually revoked (e.g., on logout). |
+
+
 #### `notification-service` Schema (`notificationdb`)
 
 This schema stores a historical record of all notifications sent.
@@ -134,6 +149,11 @@ Access to the API is controlled via JSON Web Tokens (JWT). The authentication fl
     ```
     Authorization: Bearer <your_jwt_token>
     ```
+4.  **Token Refresh**: When the `accessToken` expires, the client application does not force the user to log in again. Instead, it silently calls the `POST /auth/refresh` endpoint, sending its long-lived `refreshToken`.
+    *   The server validates the `refreshToken` against the hashed version in the database, ensuring it is not expired or revoked.
+    *   If valid, it issues a new `accessToken` and a new `refreshToken` (token rotation), invalidating the old one. This ensures that even if a refresh token is compromised, its lifespan is limited.
+
+This flow provides the high security of short-lived access tokens while allowing users to remain logged in for extended periods.
 
 ### Authorization (RBAC & Ownership)
 
@@ -242,3 +262,47 @@ docker-compose up --build
 ```
 
 After these steps, the application will be running. The tasks-service API is available at http://localhost:9000, and the notification-service is listening for gRPC calls on port 50051.
+
+---
+
+## Continuous Integration (CI) Pipeline
+
+This project uses a GitHub Actions workflow (`.github/workflows/scala-ci.yml`) to automatically enforce code quality and correctness on every push and pull request to the `main` branch. This ensures that the codebase remains healthy and stable.
+
+The pipeline runs the following checks for each service:
+
+### 1. Code Formatting Check
+
+*   **What it does**: Verifies that all Scala code is formatted according to the project's defined style.
+*   **Why it's important**: Enforces a consistent code style across the entire project, making the code easier to read and maintain for all contributors.
+*   **Tool Used**: `scalafmt`.
+
+### 2. Compilation Check
+
+*   **What it does**: Compiles all main and test source code.
+*   **Why it's important**: This is a fundamental check to ensure that the code is syntactically correct and that all dependencies are resolved. It's the first line of defense against broken code.
+*   **Tool Used**: `sbt`.
+
+### 3. Unit & Integration Tests
+
+*   **What it does**: Executes the complete test suite for the service.
+*   **Why it's important**: This is the core of the CI pipeline. It verifies that all business logic works as expected, catches bugs, and prevents regressions (i.e., breaking existing functionality).
+*   **Tool Used**: `scalatest`.
+
+### 4. Test Coverage Reporting
+
+*   **What it does**: Measures the percentage of code that is executed by the test suite and uploads the report.
+*   **Why it's important**: Provides insight into which parts of the application are not covered by tests. This helps the team identify areas that need more testing to improve reliability.
+*   **Tools Used**: `sbt-scoverage` to generate the report and `Codecov` to host and visualize it.
+
+### 5. Static Code Analysis
+
+*   **What it does**: Analyzes the source code without executing it to find potential bugs, code smells, and security vulnerabilities.
+*   **Why it's important**: Catches common programming errors and bad practices that might be missed during code reviews, leading to a more robust and secure application.
+*   **Tool Used**: `Scapegoat`.
+
+### 6. Archiving Analysis Reports
+
+*   **What it does**: Saves the static analysis report generated by Scapegoat as a downloadable artifact.
+*   **Why it's important**: Allows developers to download and inspect the detailed analysis report to understand and fix the issues that were found.
+*   **Tool Used**: `actions/upload-artifact`.

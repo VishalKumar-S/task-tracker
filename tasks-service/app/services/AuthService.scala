@@ -7,7 +7,9 @@ import org.mindrot.jbcrypt.BCrypt
 import pdi.jwt.{JwtAlgorithm, JwtClaim, Jwt}
 import play.api.Configuration
 import scala.util.Try
-import java.time.Clock
+import java.time.{Clock, LocalDateTime, ZoneOffset}
+import java.util.Base64
+import java.security.SecureRandom
 
 /**
  * A service to handle core authentication logic like password hashing and JWT management.
@@ -25,7 +27,9 @@ class AuthService @Inject() (config: Configuration) {
   // HMAC SHA-256 is a strong, standard algorithm used to sign the JWT.
   private val algorithm = JwtAlgorithm.HS256
 
-  private val expirationInSeconds = config.get[Long]("jwt.expiration")
+  private val accessTokenExpirationInSeconds = config.get[Long]("jwt.expiration")
+
+  private val refreshTokenExpirationInSeconds = config.get[Long]("jwt.refresh.expiration")
 
   implicit val clock: Clock = Clock.systemUTC()
 
@@ -67,7 +71,7 @@ class AuthService @Inject() (config: Configuration) {
     val claim = JwtClaim(
       subject = Some(user.id.toString),
       content = Json.stringify(contentJson)
-    ).issuedNow.expiresIn(expirationInSeconds)
+    ).issuedNow.expiresIn(accessTokenExpirationInSeconds)
 
     Jwt.encode(claim, secretKey, algorithm)
   }
@@ -95,5 +99,33 @@ class AuthService @Inject() (config: Configuration) {
     } yield TokenPayLoad(id.toLong, rolesSequence.toSet)
 
   }
+
+  // --- Refresh Token Management ---
+
+  /**
+   * Generates a cryptographically secure random refresh token.
+   * This is NOT a JWT - it's a random string that will be hashed before storage.
+   *
+   * @return A base64-encoded random string (32 bytes = 256 bits of entropy).
+   */
+  def generateRefreshToken(): String = {
+    val randomBytes = new Array[Byte](32)
+    val random      = new SecureRandom()
+    random.nextBytes(randomBytes)
+    Base64.getUrlEncoder.withoutPadding().encodeToString(randomBytes)
+  }
+
+  /**
+   * Hashes a refresh token using BCrypt before storing in database.
+   * This protects tokens even if the database is compromised.
+   *
+   * @param token The plain refresh token.
+   * @return BCrypt hash of the token.
+   */
+  def hashToken(token: String): String =
+    BCrypt.hashpw(token, BCrypt.gensalt(12))
+
+  def getRefreshTokenExpiry(): LocalDateTime =
+    LocalDateTime.now(ZoneOffset.UTC).plusSeconds(refreshTokenExpirationInSeconds)
 
 }
